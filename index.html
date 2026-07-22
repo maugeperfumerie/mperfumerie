@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>M Perfumerie — Perfumes importados</title>
+<meta property="og:title" content="M Perfumerie — Perfumes importados">
+<meta property="og:description" content="Perfumes importados originales, árabes y de diseñador. Todo 100% original.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://mperfumerie.com.ar">
+<meta name="description" content="Perfumes importados originales, árabes y de diseñador. Todo 100% original.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -85,26 +90,33 @@
   .burger svg{ width:22px; height:22px; display:block; }
   .burger svg line{ transition: transform .3s ease, opacity .3s ease; }
 
-  .mobile-nav{
-    position:fixed; inset:0; z-index:200;
-    background: rgba(10,9,8,0.98); backdrop-filter: blur(14px);
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
+  .mobile-nav-overlay{
+    position:fixed; inset:0; z-index:199;
+    background:rgba(10,9,8,0.55); backdrop-filter:blur(2px);
     opacity:0; visibility:hidden; transition: opacity .35s ease, visibility 0s linear .35s;
-    overflow-y:auto; padding: 90px 0 40px;
   }
-  .mobile-nav.open{ opacity:1; visibility:visible; transition: opacity .35s ease; }
-  .mobile-nav-list{ width:100%; max-width:360px; padding:0 32px; display:flex; flex-direction:column; }
+  .mobile-nav-overlay.open{ opacity:1; visibility:visible; transition: opacity .35s ease; }
+  .mobile-nav{
+    position:fixed; top:0; left:0; height:100%; width:min(320px, 82vw); z-index:200;
+    background: var(--black);
+    display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-start;
+    box-shadow: 18px 0 50px -12px rgba(0,0,0,0.5);
+    transform: translateX(-100%); transition: transform .38s cubic-bezier(.16,1,.3,1);
+    overflow-y:auto; padding: 84px 0 40px;
+  }
+  .mobile-nav.open{ transform: translateX(0); }
+  .mobile-nav-list{ width:100%; padding:0 26px; display:flex; flex-direction:column; }
   .mn-link{
-    font-family:var(--serif); font-size:24px; color:var(--white); letter-spacing:0.01em; font-weight:400;
-    padding:16px 0; border-bottom:1px solid rgba(250,248,245,0.1);
+    font-family:var(--serif); font-size:19px; color:var(--white); letter-spacing:0.01em; font-weight:400;
+    padding:14px 0; border-bottom:1px solid rgba(250,248,245,0.1);
   }
   .mn-toggle{
-    font-family:var(--serif); font-size:24px; color:var(--white); letter-spacing:0.01em; font-weight:400;
-    padding:16px 0; border-bottom:1px solid rgba(250,248,245,0.1);
+    font-family:var(--serif); font-size:19px; color:var(--white); letter-spacing:0.01em; font-weight:400;
+    padding:14px 0; border-bottom:1px solid rgba(250,248,245,0.1);
     background:none; border-top:none; border-left:none; border-right:none; cursor:pointer;
     display:flex; align-items:center; justify-content:space-between; width:100%; text-align:left;
   }
-  .mn-toggle .chev{ width:18px; height:18px; transition: transform .3s ease; flex-shrink:0; }
+  .mn-toggle .chev{ width:16px; height:16px; transition: transform .3s ease; flex-shrink:0; }
   .mn-toggle[aria-expanded="true"] .chev{ transform: rotate(180deg); }
   .mn-submenu{
     display:flex; flex-direction:column; max-height:0; overflow:hidden;
@@ -112,27 +124,29 @@
   }
   .mn-submenu.open{ max-height:400px; }
   .mn-sublink{
-    font-family:var(--sans); font-size:14px; letter-spacing:0.08em; text-transform:uppercase; font-weight:600;
-    color: var(--gold-1); padding:14px 0 14px 18px; border-bottom:1px solid rgba(250,248,245,0.06);
+    font-family:var(--sans); font-size:12.5px; letter-spacing:0.08em; text-transform:uppercase; font-weight:600;
+    color: var(--gold-1); padding:12px 0 12px 16px; border-bottom:1px solid rgba(250,248,245,0.06);
   }
   .mobile-nav a.mobile-cta{
-    font-family:var(--sans); font-size:12px; letter-spacing:0.16em; text-transform:uppercase; font-weight:700;
-    color:var(--black); background:var(--gold-grad); padding:14px 30px; border-radius:2px; margin-top:24px;
+    font-family:var(--sans); font-size:11px; letter-spacing:0.16em; text-transform:uppercase; font-weight:700;
+    color:var(--black); background:var(--gold-grad); padding:13px 26px; border-radius:2px; margin-top:22px;
     text-align:center;
   }
   .mobile-nav .close-btn{
-    position:absolute; top:22px; right:24px; background:none; border:none; color:var(--white);
-    width:26px; height:26px; cursor:pointer; padding:0;
+    position:absolute; top:20px; right:20px; background:none; border:none; color:var(--white);
+    width:22px; height:22px; cursor:pointer; padding:0;
   }
   .mobile-nav .close-btn svg{ width:100%; height:100%; }
 
   /* ---------- ADD TO CART BUTTON (en cada tarjeta) ---------- */
   .add-cart-btn{
-    margin-top:14px; width:100%; padding:11px 8px; border:1px solid var(--black); background:none;
-    color:var(--black); font-family:var(--sans); font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase;
-    font-weight:700; cursor:pointer; border-radius:2px; transition: background .25s ease, color .25s ease;
+    margin-top:auto; width:100%; padding:13px 16px; border:1px solid rgba(10,9,8,0.16); background:var(--white-dim);
+    color:var(--black); font-family:var(--sans); font-size:11px; letter-spacing:0.08em; text-transform:uppercase;
+    font-weight:700; cursor:pointer; border-radius:999px; transition: background .25s ease, border-color .25s ease;
+    display:flex; align-items:center; justify-content:center; gap:8px;
   }
-  .add-cart-btn:hover{ background:var(--black); color:var(--white); }
+  .add-cart-btn svg{ width:14px; height:14px; flex-shrink:0; }
+  .add-cart-btn:hover{ background:var(--white); border-color:var(--black); }
 
   /* ---------- PRODUCT MODAL ---------- */
   .product-modal{
@@ -204,6 +218,30 @@
   }
   .cart-checkout-btn{ display:block; width:100%; text-align:center; }
 
+  /* ---------- CARTEL DE CONFIRMACIÓN (redirigir a WhatsApp) ---------- */
+  .confirm-modal{
+    position:fixed; inset:0; z-index:400; display:flex; align-items:center; justify-content:center;
+    opacity:0; visibility:hidden; transition: opacity .3s ease, visibility 0s linear .3s; padding:24px;
+  }
+  .confirm-modal.open{ opacity:1; visibility:visible; transition: opacity .3s ease; }
+  .confirm-overlay{ position:absolute; inset:0; background:rgba(10,9,8,0.75); backdrop-filter:blur(4px); }
+  .confirm-box{
+    position:relative; z-index:2; background:var(--white); width:100%; max-width:360px;
+    border-radius:10px; padding:34px 28px 28px; text-align:center;
+    transform:translateY(12px); transition: transform .35s ease;
+  }
+  .confirm-modal.open .confirm-box{ transform:translateY(0); }
+  .confirm-icon{ width:34px; height:34px; margin:0 auto 16px; }
+  .confirm-box h4{ font-family:var(--serif); font-size:19px; font-weight:500; margin-bottom:10px; }
+  .confirm-box p{ font-size:13px; line-height:1.6; color:rgba(10,9,8,0.6); font-weight:300; margin-bottom:24px; }
+  .confirm-actions{ display:flex; gap:10px; }
+  .confirm-actions .btn-gold, .confirm-actions .btn-outline-dark{ flex:1; text-align:center; padding:12px 10px; font-size:11px; }
+  .btn-outline-dark{
+    background:none; border:1px solid rgba(10,9,8,0.2); color:var(--black); border-radius:2px;
+    font-family:var(--sans); letter-spacing:0.1em; text-transform:uppercase; font-weight:700; cursor:pointer;
+  }
+  .btn-outline-dark:hover{ border-color:var(--black); }
+
   /* ---------- HERO ---------- */
   .hero{
     position:relative; background:var(--black);
@@ -234,12 +272,12 @@
   }
   .hero-desc{
     position:relative; z-index:2; margin-top:18px; max-width:min(700px, 92%); width:100%;
-    font-size:14px; line-height:1.6; color:rgba(250,248,245,0.65); font-weight:400;
-    letter-spacing:0.005em; white-space:normal;
+    font-family:var(--serif); font-size:13px; line-height:1.65; color:rgba(250,248,245,0.68); font-weight:400;
+    letter-spacing:0.01em; white-space:normal;
     animation: rise 1.2s .25s cubic-bezier(.16,1,.3,1) both;
   }
   @media (max-width:520px){
-    .hero-desc{ font-size:12.5px; line-height:1.55; }
+    .hero-desc{ font-size:11.5px; line-height:1.55; }
   }
   .hero .cta-row{
     position:relative; z-index:2; margin-top:8px; display:flex; gap:16px; flex-wrap:wrap; justify-content:center;
@@ -344,32 +382,36 @@
   .products{ padding:110px 0; background:var(--white-dim); }
   .prod-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:28px; }
   .prod-card{
-    background:var(--white); border:1px solid rgba(10,9,8,0.08); padding:26px 22px 24px; text-align:center;
-    transition: transform .35s ease, box-shadow .35s ease; position:relative; cursor:pointer;
+    background:var(--white); border:1px solid rgba(10,9,8,0.08); border-radius:16px; overflow:hidden;
+    text-align:left; transition: transform .3s ease, box-shadow .3s ease; position:relative; cursor:pointer;
+    display:flex; flex-direction:column;
   }
-  .prod-card:hover{ transform:translateY(-6px); box-shadow:0 24px 40px -20px rgba(10,9,8,0.25); }
+  .prod-card:hover{ transform:translateY(-5px); box-shadow:0 22px 38px -20px rgba(10,9,8,0.22); }
   .sale-badge{
-    position:absolute; top:12px; left:12px; z-index:2;
+    position:absolute; top:14px; left:14px; z-index:2;
     background:var(--gold-grad); color:var(--black);
     font-size:9.5px; font-weight:800; letter-spacing:0.04em; text-transform:uppercase;
-    padding:5px 9px; border-radius:2px;
+    padding:6px 12px; border-radius:2px;
   }
-  .bottle{
-    width:100%; height:160px; display:flex; align-items:flex-end; justify-content:center; margin-bottom:20px;
+  .prod-img-wrap{ padding:26px 20px 6px; }
+  .prod-img{ width:100%; height:170px; object-fit:contain; }
+  .prod-body{ padding:6px 20px 22px; display:flex; flex-direction:column; flex:1; }
+  .prod-brand{
+    font-family:var(--sans); font-size:10.5px; letter-spacing:0.09em; text-transform:uppercase;
+    font-weight:800; color:var(--black); margin-bottom:5px;
   }
-  .bottle svg{ height:150px; }
-  .prod-img{ width:100%; height:170px; object-fit:contain; margin-bottom:18px; }
-  .prod-card .chip{
-    display:inline-block; font-size:9px; letter-spacing:0.16em; text-transform:uppercase; font-weight:700;
-    color:var(--gold-2); background:var(--black); padding:5px 10px; border-radius:2px; margin-bottom:12px;
+  .prod-card h4{ font-family:var(--serif); font-size:16px; font-weight:500; margin-bottom:6px; line-height:1.32; }
+  .prod-type{
+    font-family:var(--sans); font-size:10.5px; color:rgba(10,9,8,0.42); text-transform:uppercase;
+    letter-spacing:0.05em; margin-bottom:13px;
   }
-  .prod-card h4{ font-family:var(--serif); font-size:18px; font-weight:500; margin-bottom:6px; }
-  .prod-card .notes{ font-size:12px; color:rgba(10,9,8,0.5); font-weight:300; margin-bottom:14px; }
-  .prod-card .ml{ font-size:11.5px; color:rgba(10,9,8,0.5); font-weight:400; margin-bottom:12px; }
-  .prod-card .price{ font-size:14px; font-weight:700; letter-spacing:0.02em; }
-  .price-row{ display:flex; align-items:baseline; justify-content:center; gap:9px; }
+  .prod-ml-chip{
+    display:inline-block; width:fit-content; font-family:var(--sans); font-size:11px; color:rgba(10,9,8,0.68);
+    border:1px solid rgba(10,9,8,0.16); border-radius:999px; padding:5px 14px; margin-bottom:15px;
+  }
+  .price-row{ display:flex; align-items:baseline; justify-content:flex-start; gap:10px; margin-bottom:16px; }
   .price-old{ font-size:12.5px; color:#a3a3a3; text-decoration:line-through; font-weight:500; }
-  .price-new{ font-size:15.5px; font-weight:800; color:var(--black); }
+  .price-new{ font-size:17px; font-weight:800; color:var(--black); }
 
   /* ---------- BRANDS STRIP (marquee) ---------- */
   .brands-strip{ background:var(--white); padding:52px 0 58px; border-top:1px solid rgba(10,9,8,0.06); width:100%; max-width:100vw; overflow:hidden; }
@@ -417,9 +459,71 @@
 
   /* ---------- CATALOG SECTIONS (Perfumes / Perfumería / Marcas) ---------- */
   .catalog-section{ background:var(--white); padding:90px 0; }
+
+  /* ---------- BARRA ORDENAR / FILTRAR ---------- */
+  .sort-filter-bar{
+    display:flex; gap:8px; background:var(--white); border:1px solid rgba(10,9,8,0.1);
+    padding:6px 8px; border-radius:4px; margin-bottom:40px; position:relative; z-index:6;
+    box-shadow:0 2px 10px -6px rgba(10,9,8,0.15);
+  }
+  .sf-item{ position:relative; }
+  .sf-btn{
+    background:none; border:none; cursor:pointer; font-family:var(--sans); font-size:11.5px;
+    letter-spacing:0.08em; text-transform:uppercase; font-weight:700; color:var(--black);
+    display:flex; align-items:center; gap:6px; padding:11px 14px; border-radius:3px; transition: background .2s ease;
+  }
+  .sf-btn:hover, .sf-btn.active{ background:rgba(10,9,8,0.06); }
+  .sf-chev{ width:12px; height:12px; transition: transform .25s ease; }
+  .sf-btn.active .sf-chev{ transform: rotate(180deg); }
+  .sf-panel{
+    position:absolute; top:calc(100% + 8px); left:0; min-width:230px; max-width:82vw;
+    background:var(--white); border:1px solid rgba(10,9,8,0.1); border-radius:4px;
+    box-shadow:0 20px 44px -14px rgba(10,9,8,0.28); padding:8px; display:none; z-index:20;
+  }
+  .sf-item:last-child .sf-panel{ left:auto; right:0; }
+  .sf-panel.open{ display:block; }
+  .sf-option{
+    display:block; width:100%; text-align:left; background:none; border:none; padding:11px 12px;
+    font-family:var(--sans); font-size:12.5px; color:rgba(10,9,8,0.75); cursor:pointer; border-radius:3px;
+  }
+  .sf-option:hover{ background:var(--white-dim); }
+  .sf-option.active{ color:var(--black); font-weight:800; }
+  .sf-filter-group{ padding:8px 10px 12px; border-bottom:1px solid rgba(10,9,8,0.08); }
+  .sf-filter-group:last-of-type{ border-bottom:none; }
+  .sf-filter-label{
+    display:block; font-size:9.5px; letter-spacing:0.1em; text-transform:uppercase; font-weight:700;
+    color:rgba(10,9,8,0.4); margin-bottom:9px;
+  }
+  .sf-filter-options{ display:flex; flex-wrap:wrap; gap:6px; max-height:170px; overflow-y:auto; }
+  .sf-chip-option{
+    display:inline-block; padding:6.5px 12px; border:1px solid rgba(10,9,8,0.15); border-radius:999px; font-family:var(--sans);
+    font-size:10.5px; background:none; cursor:pointer; color:rgba(10,9,8,0.7); text-decoration:none;
+  }
+  .sf-chip-option.active{ background:var(--black); color:var(--white); border-color:var(--black); }
+  .sf-clear{
+    display:block; width:100%; text-align:center; margin-top:4px; padding:11px;
+    font-family:var(--sans); font-size:10.5px; letter-spacing:0.06em; text-transform:uppercase; font-weight:700;
+    color:rgba(10,9,8,0.5); background:none; border:none; cursor:pointer;
+  }
+  .sf-clear:hover{ color:var(--black); }
+
   .catalog-empty{
     text-align:center; font-size:13px; color:rgba(10,9,8,0.45); font-weight:300;
     border:1px dashed rgba(10,9,8,0.15); padding:40px 20px; border-radius:2px;
+  }
+
+  /* ---------- CÓMO COMPRAR ---------- */
+  .hc-steps{ display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:rgba(10,9,8,0.08); border:1px solid rgba(10,9,8,0.08); }
+  .hc-step{ background:var(--white); padding:34px 26px; }
+  .hc-num{ font-family:var(--serif); font-style:italic; color:var(--gold-1); font-size:15px; margin-bottom:16px; }
+  .hc-step h4{ font-family:var(--serif); font-size:17px; font-weight:500; margin-bottom:10px; }
+  .hc-step p{ font-size:12.5px; line-height:1.65; color:rgba(10,9,8,0.55); font-weight:300; }
+  @media (max-width:900px){
+    .hc-steps{ grid-template-columns:repeat(2,1fr); }
+  }
+  @media (max-width:520px){
+    .hc-steps{ grid-template-columns:1fr; }
+    .hc-step{ padding:26px 22px; }
   }
   /* buscador + filtro alfabético + grilla de marcas */
   .brand-search-row{ max-width:520px; margin:0 auto 26px; }
@@ -529,8 +633,13 @@
     .nav-logo img{ height:26px; }
     .wrap{ padding:0 20px; }
     .prod-grid{ grid-template-columns:1fr 1fr; gap:16px; }
-    .prod-card{ padding:16px 12px 16px; }
-    .prod-img{ height:130px; }
+    .prod-card{ border-radius:13px; }
+    .prod-img-wrap{ padding:16px 14px 4px; }
+    .prod-body{ padding:4px 14px 16px; }
+    .prod-img{ height:120px; }
+    .prod-card h4{ font-size:13.5px; }
+    .price-new{ font-size:15px; }
+    .add-cart-btn{ padding:11px 10px; font-size:9.5px; }
     .quick-grid{ gap:8px; }
     .quick-card{ padding:12px 4px; }
     .quick-card span{ font-size:10px; letter-spacing:0.02em; }
@@ -603,6 +712,20 @@
   </div>
 </div>
 
+<div class="confirm-modal" id="whatsappConfirmModal">
+  <div class="confirm-overlay" id="whatsappConfirmOverlay"></div>
+  <div class="confirm-box">
+    <svg class="confirm-icon" viewBox="0 0 24 24" fill="none"><path d="M20.5 11.5c0 4.7-3.8 8.5-8.5 8.5-1.5 0-2.9-.4-4.1-1.1L3.5 20l1.1-4.3A8.4 8.4 0 0 1 3.5 11.5C3.5 6.8 7.3 3 12 3s8.5 3.8 8.5 8.5z" stroke="#0a0908" stroke-width="1.4" stroke-linejoin="round"/><path d="M8.5 10.3c.3 2.3 2.4 4.4 4.7 4.7" stroke="#0a0908" stroke-width="1.4" stroke-linecap="round"/></svg>
+    <h4>Vas a continuar por WhatsApp</h4>
+    <p>Te llevamos a WhatsApp con tu pedido ya armado, para que termines la compra hablando directo con nosotros.</p>
+    <div class="confirm-actions">
+      <button class="btn-outline-dark" id="whatsappConfirmCancel">Cancelar</button>
+      <button class="btn-gold" id="whatsappConfirmGo">Ir a WhatsApp</button>
+    </div>
+  </div>
+</div>
+
+<div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
 <div class="mobile-nav" id="mobileNav">
   <button class="close-btn" id="mobileCloseBtn" aria-label="Cerrar menú">
     <svg viewBox="0 0 24 24" fill="none">
@@ -622,7 +745,7 @@
       <a href="#maquillajes" class="mn-sublink">Maquillajes</a>
       <a href="#perfumeria" class="mn-sublink">Perfumería</a>
       <a href="#marcas" class="mn-sublink">Marcas</a>
-      <a href="#ofertas" class="mn-sublink">Todos los productos</a>
+      <a href="#todos-productos" class="mn-sublink">Todos los productos</a>
     </div>
 
     <a href="#contacto" class="mn-link">Contacto</a>
@@ -690,14 +813,14 @@
         <h2 style="margin-top:14px;">¿Buscás una <em>fragancia</em><br>en particular?</h2>
         <p class="lead">Contanos qué estás buscando — diseñador, árabe o importado — y te respondemos con disponibilidad y precio.</p>
         <div class="cta-row">
-          <a href="#" class="btn-gold">Escribir por WhatsApp</a>
+          <a href="https://wa.me/5493468437518" class="btn-gold" target="_blank">Escribir por WhatsApp</a>
           <a href="#" class="btn-outline">Ver Instagram</a>
         </div>
       </div>
       <div class="info-list">
         <div class="info-item">
           <span class="eyebrow">WhatsApp</span>
-          <a href="#">+54 9 341 000-0000</a>
+          <a href="https://wa.me/5493468437518" target="_blank">+54 9 3468 43-7518</a>
         </div>
         <div class="info-item">
           <span class="eyebrow">Email</span>
@@ -724,6 +847,57 @@
         <a href="#contacto">Contacto</a>
       </div>
     </footer>
+  </div>
+</section>
+
+<section class="catalog-section" id="todos-productos">
+  <div class="wrap">
+    <div class="section-head" style="margin-bottom:28px;">
+      <span class="eyebrow on-light">Catálogo completo</span>
+      <h2>Todos los productos</h2>
+    </div>
+
+    <div class="sort-filter-bar">
+      <div class="sf-item">
+        <button class="sf-btn" id="sortBtn">
+          Ordenar
+          <svg class="sf-chev" viewBox="0 0 24 24" fill="none"><path d="M7 10l5 5 5-5" stroke="#0a0908" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="sf-panel" id="sortPanel">
+          <button class="sf-option active" data-sort="ingreso">Orden de ingreso</button>
+          <button class="sf-option" data-sort="precio-desc">Precio: mayor a menor</button>
+          <button class="sf-option" data-sort="precio-asc">Precio: menor a mayor</button>
+          <button class="sf-option" data-sort="az">Alfabético (A-Z)</button>
+        </div>
+      </div>
+      <div class="sf-item">
+        <button class="sf-btn" id="filterBtn">
+          Filtrar
+          <svg class="sf-chev" viewBox="0 0 24 24" fill="none"><path d="M7 10l5 5 5-5" stroke="#0a0908" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="sf-panel sf-panel-filter" id="filterPanel">
+          <div class="sf-filter-group">
+            <span class="sf-filter-label">Categoría</span>
+            <div class="sf-filter-options">
+              <a href="#perfumes" class="sf-chip-option">Perfumes</a>
+              <a href="#perfumeria" class="sf-chip-option">Perfumería</a>
+              <a href="#maquillajes" class="sf-chip-option">Maquillaje</a>
+            </div>
+          </div>
+          <div class="sf-filter-group">
+            <span class="sf-filter-label">Marca</span>
+            <div class="sf-filter-options" id="filterBrandOptions"></div>
+          </div>
+          <div class="sf-filter-group">
+            <span class="sf-filter-label">Tipo</span>
+            <div class="sf-filter-options" id="filterTypeOptions"></div>
+          </div>
+          <button class="sf-clear" id="filterClearBtn">Limpiar filtros</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="prod-grid" id="todosGrid"></div>
   </div>
 </section>
 
@@ -794,9 +968,30 @@
     <div class="section-head" style="margin-bottom:44px;">
       <span class="eyebrow on-light">Guía rápida</span>
       <h2>Cómo comprar</h2>
-      <p>Estamos completando el paso a paso de compra.</p>
+      <p>Todo el proceso se termina hablando directo con nosotros por WhatsApp.</p>
     </div>
-    <div class="catalog-empty">Estamos armando esta sección — contanos el proceso de compra y lo cargamos acá.</div>
+    <div class="hc-steps">
+      <div class="hc-step">
+        <div class="hc-num">01</div>
+        <h4>Elegí tu producto</h4>
+        <p>Recorré Ofertas, Nuevos ingresos o buscá por marca. Tocando cualquier producto podés ver el detalle completo.</p>
+      </div>
+      <div class="hc-step">
+        <div class="hc-num">02</div>
+        <h4>Agregalo al carrito</h4>
+        <p>Con el botón "Agregar" sumás el producto a tu carrito. Podés seguir eligiendo más — el ícono de arriba muestra cuántos llevás.</p>
+      </div>
+      <div class="hc-step">
+        <div class="hc-num">03</div>
+        <h4>Tocá "Terminar compra"</h4>
+        <p>Abrí el carrito y tocá el botón. Te va a aparecer un cartel avisando que te llevamos a WhatsApp para cerrar la compra.</p>
+      </div>
+      <div class="hc-step">
+        <div class="hc-num">04</div>
+        <h4>Confirmá por WhatsApp</h4>
+        <p>Se abre WhatsApp con tu pedido ya armado (productos, cantidades y total). Desde ahí coordinamos el pago y el envío o retiro con vos.</p>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -813,11 +1008,12 @@
   const mobileNav = document.getElementById('mobileNav');
   const mobileCloseBtn = document.getElementById('mobileCloseBtn');
 
-  function openMobileNav(){ mobileNav.classList.add('open'); document.body.style.overflow = 'hidden'; }
-  function closeMobileNav(){ mobileNav.classList.remove('open'); document.body.style.overflow = ''; }
+  function openMobileNav(){ mobileNav.classList.add('open'); document.getElementById('mobileNavOverlay').classList.add('open'); document.body.style.overflow = 'hidden'; }
+  function closeMobileNav(){ mobileNav.classList.remove('open'); document.getElementById('mobileNavOverlay').classList.remove('open'); document.body.style.overflow = ''; }
 
   burgerBtn.addEventListener('click', openMobileNav);
   mobileCloseBtn.addEventListener('click', closeMobileNav);
+  document.getElementById('mobileNavOverlay').addEventListener('click', closeMobileNav);
   mobileNav.querySelectorAll('a').forEach(a => a.addEventListener('click', closeMobileNav));
 
   // accordion "Productos" dentro del menú mobile
@@ -913,17 +1109,23 @@
   function cardHtml(b){
     const badge = b.off ? `<span class="sale-badge">${b.off}</span>` : '';
     const priceHtml = b.priceOld
-      ? `<div class="price-row"><span class="price-old">${b.priceOld}</span><span class="price-new">${b.priceNew}</span></div>`
-      : `<div class="price">${b.price}</div>`;
+      ? `<div class="price-row"><span class="price-new">${b.priceNew}</span><span class="price-old">${b.priceOld}</span></div>`
+      : `<div class="price-row"><span class="price-new">${b.price}</span></div>`;
     return `
       <div class="prod-card" data-id="${b.id}">
         ${badge}
-        <img class="prod-img" src="data:image/jpeg;base64,${b.img}" alt="${b.name}">
-        <span class="chip">${b.chip}</span>
-        <h4>${b.name}</h4>
-        <div class="ml">${b.ml}</div>
-        ${priceHtml}
-        <button class="add-cart-btn" data-id="${b.id}">Agregar al carrito</button>
+        <div class="prod-img-wrap"><img class="prod-img" src="data:image/jpeg;base64,${b.img}" alt="${b.name}"></div>
+        <div class="prod-body">
+          <div class="prod-brand">${b.brand}</div>
+          <h4>${b.name}</h4>
+          <div class="prod-type">${b.chip}</div>
+          <span class="prod-ml-chip">${b.ml}</span>
+          ${priceHtml}
+          <button class="add-cart-btn" data-id="${b.id}">
+            Agregar
+            <svg viewBox="0 0 24 24" fill="none"><path d="M3 4h2l2.4 12.2a2 2 0 0 0 2 1.6h8.4a2 2 0 0 0 2-1.6L21.5 8H6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="20.5" r="1.4" fill="currentColor"/><circle cx="17.5" cy="20.5" r="1.4" fill="currentColor"/></svg>
+          </button>
+        </div>
       </div>`;
   }
 
@@ -957,6 +1159,97 @@
   attachGridEvents('ofertasGrid');
   attachGridEvents('nuevosGrid');
   attachGridEvents('brandResultsGrid');
+  attachGridEvents('todosGrid');
+
+  // ---------- TODOS LOS PRODUCTOS: orden y filtro ----------
+  const todosBase = [...ofertas, ...nuevos];
+  let sortMode = 'ingreso';
+  let filterBrand = null;
+  let filterType = null;
+
+  function getPriceNum(p){ return parsePrice(p.priceNew || p.price); }
+
+  function computeTodosList(){
+    let list = todosBase.slice();
+    if(filterBrand) list = list.filter(p => p.brand === filterBrand);
+    if(filterType) list = list.filter(p => p.chip === filterType);
+    if(sortMode === 'precio-desc') list.sort((a,b) => getPriceNum(b) - getPriceNum(a));
+    else if(sortMode === 'precio-asc') list.sort((a,b) => getPriceNum(a) - getPriceNum(b));
+    else if(sortMode === 'az') list.sort((a,b) => a.name.localeCompare(b.name, 'es'));
+    return list;
+  }
+
+  function renderTodos(){
+    const list = computeTodosList();
+    const grid = document.getElementById('todosGrid');
+    if(list.length === 0){
+      grid.innerHTML = '<div class="catalog-empty" style="grid-column:1/-1;">No se encontraron productos con ese filtro.</div>';
+    } else {
+      grid.innerHTML = list.map(cardHtml).join('');
+    }
+  }
+  renderTodos();
+
+  function closeAllSfPanels(){
+    document.querySelectorAll('.sf-panel').forEach(p => p.classList.remove('open'));
+    document.querySelectorAll('.sf-btn').forEach(b => b.classList.remove('active'));
+  }
+  document.getElementById('sortBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    const panel = document.getElementById('sortPanel');
+    const wasOpen = panel.classList.contains('open');
+    closeAllSfPanels();
+    if(!wasOpen){ panel.classList.add('open'); document.getElementById('sortBtn').classList.add('active'); }
+  });
+  document.getElementById('filterBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    const panel = document.getElementById('filterPanel');
+    const wasOpen = panel.classList.contains('open');
+    closeAllSfPanels();
+    if(!wasOpen){ panel.classList.add('open'); document.getElementById('filterBtn').classList.add('active'); }
+  });
+  document.addEventListener('click', closeAllSfPanels);
+  document.querySelectorAll('.sf-panel').forEach(p => p.addEventListener('click', e => e.stopPropagation()));
+
+  document.querySelectorAll('#sortPanel .sf-option').forEach(btn => {
+    btn.addEventListener('click', () => {
+      sortMode = btn.dataset.sort;
+      document.querySelectorAll('#sortPanel .sf-option').forEach(o => o.classList.toggle('active', o === btn));
+      renderTodos();
+      closeAllSfPanels();
+    });
+  });
+
+  function buildFilterOptions(){
+    const brandsPresent = [...new Set(todosBase.map(p => p.brand))].sort((a,b) => a.localeCompare(b, 'es'));
+    const typesPresent = [...new Set(todosBase.map(p => p.chip))];
+    const brandEl = document.getElementById('filterBrandOptions');
+    brandEl.innerHTML = brandsPresent.map(b => `<button class="sf-chip-option" data-brand="${b}">${b}</button>`).join('');
+    const typeEl = document.getElementById('filterTypeOptions');
+    typeEl.innerHTML = typesPresent.map(t => `<button class="sf-chip-option" data-type="${t}">${t}</button>`).join('');
+
+    brandEl.querySelectorAll('.sf-chip-option').forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterBrand = (filterBrand === btn.dataset.brand) ? null : btn.dataset.brand;
+        brandEl.querySelectorAll('.sf-chip-option').forEach(o => o.classList.toggle('active', o.dataset.brand === filterBrand));
+        renderTodos();
+      });
+    });
+    typeEl.querySelectorAll('.sf-chip-option').forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterType = (filterType === btn.dataset.type) ? null : btn.dataset.type;
+        typeEl.querySelectorAll('.sf-chip-option').forEach(o => o.classList.toggle('active', o.dataset.type === filterType));
+        renderTodos();
+      });
+    });
+  }
+  buildFilterOptions();
+  document.getElementById('filterClearBtn').addEventListener('click', () => {
+    filterBrand = null; filterType = null;
+    document.querySelectorAll('.sf-chip-option').forEach(o => o.classList.remove('active'));
+    renderTodos();
+  });
+
 
   // ---------- LISTADO DE MARCAS Y RESULTADOS POR MARCA ----------
   let activeLetter = null;
@@ -1134,16 +1427,33 @@
     if(checkoutBtn){
       checkoutBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        let msg = 'Hola! Quiero consultar por estos productos:%0A';
+        let msg = 'Hola! Quiero terminar mi compra:\n\n';
         cart.forEach(c => {
           const p = allProducts[c.id];
-          if(p) msg += `- ${p.name} (x${c.qty})%0A`;
+          if(p) msg += `• ${p.name} (x${c.qty}) — ${money(parsePrice(p.priceNew || p.price) * c.qty)}\n`;
         });
-        msg += `%0ATotal: ${money(total)}`;
-        window.open('https://wa.me/5493410000000?text=' + msg, '_blank');
+        msg += `\nTotal: ${money(total)}\n\nhttps://mperfumerie.com.ar\n\n¡Quiero terminar mi compra!`;
+        openWhatsappConfirm('https://wa.me/5493468437518?text=' + encodeURIComponent(msg));
       });
     }
   }
+
+  // ---------- cartel de confirmación antes de ir a WhatsApp ----------
+  let pendingWhatsappUrl = null;
+  function openWhatsappConfirm(url){
+    pendingWhatsappUrl = url;
+    document.getElementById('whatsappConfirmModal').classList.add('open');
+  }
+  function closeWhatsappConfirm(){
+    document.getElementById('whatsappConfirmModal').classList.remove('open');
+    pendingWhatsappUrl = null;
+  }
+  document.getElementById('whatsappConfirmOverlay').addEventListener('click', closeWhatsappConfirm);
+  document.getElementById('whatsappConfirmCancel').addEventListener('click', closeWhatsappConfirm);
+  document.getElementById('whatsappConfirmGo').addEventListener('click', () => {
+    if(pendingWhatsappUrl) window.open(pendingWhatsappUrl, '_blank');
+    closeWhatsappConfirm();
+  });
 
   function openCart(){
     document.getElementById('cartDrawer').classList.add('open');
