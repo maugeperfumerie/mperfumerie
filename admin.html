@@ -36,6 +36,12 @@
   .hidden{display:none}
   .row{display:flex;gap:10px}
   .row > div{flex:1}
+  .ing-edit-row{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+  .ing-edit-row input[type=text]{flex:2;margin:0}
+  .ing-edit-row input[type=number]{flex:1;width:56px;margin:0}
+  .ing-edit-row input[type=color]{width:38px;height:36px;padding:2px;flex-shrink:0;margin:0}
+  .ing-edit-row button{padding:6px 9px;margin:0;font-size:12px;flex-shrink:0}
+  .ing-hint{font-size:11px;color:#777;margin:2px 0 6px}
 </style>
 </head>
 <body>
@@ -93,33 +99,70 @@
           </div>
         </div>
 
-        <label>Categoría</label>
+        <label>¿Dónde mostrar?</label>
         <select id="f_categoria">
-          <option value="nuevos">Nuevos ingresos (sin descuento)</option>
-          <option value="ofertas">Ofertas (con descuento)</option>
+          <option value="ofertas">Ofertas</option>
+          <option value="nuevos">Nuevos ingresos</option>
+          <option value="tendencias">Tendencias</option>
+          <option value="ninguna">Ninguna (solo en Todos los productos / búsqueda)</option>
+        </select>
+
+        <label>Género</label>
+        <select id="f_genero">
+          <option value="Hombre">Hombre</option>
+          <option value="Mujer">Mujer</option>
+          <option value="Unisex">Unisex</option>
+        </select>
+
+        <label style="display:flex; align-items:center; gap:8px; margin-top:14px;">
+          <input type="checkbox" id="f_descuento" style="width:auto; margin:0;">
+          Tiene descuento (muestra precio tachado + % OFF)
+        </label>
+
+        <label style="display:flex; align-items:center; gap:8px; margin-top:10px;">
+          <input type="checkbox" id="f_stock" style="width:auto; margin:0;" checked>
+          Hay stock
+        </label>
+        <p class="ing-hint">Si lo destildás, el producto deja de aparecer en Ofertas/Nuevos ingresos/Tendencias y en el inicio, pero se sigue pudiendo encontrar (marcado "Sin stock") en Todos los productos, en la búsqueda y en su marca.</p>
+
+        <label>Moneda</label>
+        <select id="f_moneda">
+          <option value="ARS">$ Peso argentino</option>
+          <option value="USD">US$ Dólar</option>
+          <option value="EUR">€ Euro</option>
         </select>
 
         <div id="precioSimple">
           <label>Precio</label>
-          <input id="f_price" placeholder="$100.000">
+          <input id="f_price" placeholder="$100.000" inputmode="numeric">
         </div>
         <div id="precioOferta" class="hidden">
           <div class="row">
             <div>
               <label>Precio anterior</label>
-              <input id="f_priceOld" placeholder="$250.000">
+              <input id="f_priceOld" placeholder="$250.000" inputmode="numeric">
             </div>
             <div>
               <label>Precio con descuento</label>
-              <input id="f_priceNew" placeholder="$175.000">
+              <input id="f_priceNew" placeholder="$175.000" inputmode="numeric">
             </div>
           </div>
           <label>Texto del descuento</label>
           <input id="f_off" placeholder="30% OFF">
         </div>
 
-        <label>Descripción</label>
-        <textarea id="f_descripcion" rows="3"></textarea>
+        <label>Ingredientes (el primero es el principal — queda arriba con la barra más larga)</label>
+        <p class="ing-hint">Nombre, % de la barra (0-100) y color. El orden en que los agregás es el orden en que se muestran.</p>
+        <div id="ingList"></div>
+        <button type="button" class="secondary" id="btnAddIng">+ Agregar ingrediente</button>
+
+        <label>Notas de salida</label>
+        <textarea id="f_notasSalida" rows="2" placeholder="Ej: limón siciliano, bergamota"></textarea>
+        <label>Notas de corazón</label>
+        <textarea id="f_notasCorazon" rows="2" placeholder="Ej: manzana, jazmín"></textarea>
+        <label>Notas de fondo</label>
+        <textarea id="f_notasFondo" rows="2" placeholder="Ej: almizcle, madera de cedro"></textarea>
+        <p class="ing-hint">Estas notas aparecen en la pestaña "Ingredientes" de la ficha del producto.</p>
 
         <label>Fotos (la primera es la principal, foto de estudio)</label>
         <div class="fotos-preview" id="fotosPreview"></div>
@@ -190,6 +233,7 @@
   let idActual = null;
   let fotosNuevas = []; // File objects pendientes de subir
   let fotosExistentes = []; // URLs ya subidas (se mantienen si no se borran)
+  let ingredientesActuales = []; // [{nombre, cantidad, color}]
 
   async function cargarLista(){
     const snap = await db.collection('productos').orderBy('orden','asc').get();
@@ -208,21 +252,41 @@
   }
 
   function toggleCategoriaCampos(){
-    const cat = document.getElementById('f_categoria').value;
-    document.getElementById('precioSimple').classList.toggle('hidden', cat === 'ofertas');
-    document.getElementById('precioOferta').classList.toggle('hidden', cat !== 'ofertas');
+    const tieneDescuento = document.getElementById('f_descuento').checked;
+    document.getElementById('precioSimple').classList.toggle('hidden', tieneDescuento);
+    document.getElementById('precioOferta').classList.toggle('hidden', !tieneDescuento);
   }
-  document.getElementById('f_categoria').onchange = toggleCategoriaCampos;
+  document.getElementById('f_descuento').onchange = toggleCategoriaCampos;
+
+  // ---------- auto-formateo de precios: puntos de miles + símbolo de moneda ----------
+  const monedaSimbolos = { ARS: '$', USD: 'US$', EUR: '€' };
+  function simboloActual(){
+    return monedaSimbolos[document.getElementById('f_moneda').value] || '$';
+  }
+  function formatearPrecio(input){
+    const digitos = input.value.replace(/[^\d]/g, '');
+    input.value = digitos ? simboloActual() + Number(digitos).toLocaleString('es-AR') : '';
+  }
+  const camposPrecio = ['f_price', 'f_priceOld', 'f_priceNew'];
+  camposPrecio.forEach(id => {
+    const input = document.getElementById(id);
+    input.addEventListener('input', () => formatearPrecio(input));
+  });
+  document.getElementById('f_moneda').addEventListener('change', () => {
+    camposPrecio.forEach(id => formatearPrecio(document.getElementById(id)));
+  });
 
   function limpiarForm(){
     idActual = null;
     fotosNuevas = [];
     fotosExistentes = [];
+    ingredientesActuales = [];
     document.getElementById('form').reset();
     document.getElementById('formTitulo').textContent = 'Nuevo producto';
     document.getElementById('btnBorrar').classList.add('hidden');
     document.getElementById('status').textContent = '';
     renderFotosPreview();
+    renderIngredientes();
     toggleCategoriaCampos();
   }
 
@@ -252,6 +316,45 @@
     renderFotosPreview();
   };
 
+  function renderIngredientes(){
+    const cont = document.getElementById('ingList');
+    cont.innerHTML = '';
+    ingredientesActuales.forEach((ing, i) => {
+      const div = document.createElement('div');
+      div.className = 'ing-edit-row';
+      div.innerHTML = `
+        <input type="text" class="ing-nombre" placeholder="Nombre (ej: Vainilla)" value="${(ing.nombre||'').replace(/"/g,'&quot;')}">
+        <input type="number" class="ing-cantidad" min="0" max="100" value="${ing.cantidad ?? 50}">
+        <input type="color" class="ing-color" value="${ing.color || '#c9a86a'}">
+        <button type="button" class="secondary ing-up" title="Subir" ${i === 0 ? 'disabled' : ''}>↑</button>
+        <button type="button" class="secondary ing-down" title="Bajar" ${i === ingredientesActuales.length - 1 ? 'disabled' : ''}>↓</button>
+        <button type="button" class="danger ing-del" title="Borrar">×</button>`;
+      div.querySelector('.ing-nombre').oninput = (e) => { ingredientesActuales[i].nombre = e.target.value; };
+      div.querySelector('.ing-cantidad').oninput = (e) => { ingredientesActuales[i].cantidad = e.target.value; };
+      div.querySelector('.ing-color').oninput = (e) => { ingredientesActuales[i].color = e.target.value; };
+      div.querySelector('.ing-up').onclick = () => {
+        if (i === 0) return;
+        [ingredientesActuales[i-1], ingredientesActuales[i]] = [ingredientesActuales[i], ingredientesActuales[i-1]];
+        renderIngredientes();
+      };
+      div.querySelector('.ing-down').onclick = () => {
+        if (i === ingredientesActuales.length - 1) return;
+        [ingredientesActuales[i+1], ingredientesActuales[i]] = [ingredientesActuales[i], ingredientesActuales[i+1]];
+        renderIngredientes();
+      };
+      div.querySelector('.ing-del').onclick = () => {
+        ingredientesActuales.splice(i, 1);
+        renderIngredientes();
+      };
+      cont.appendChild(div);
+    });
+  }
+
+  document.getElementById('btnAddIng').onclick = () => {
+    ingredientesActuales.push({nombre:'', cantidad:50, color:'#c9a86a'});
+    renderIngredientes();
+  };
+
   document.getElementById('btnNuevo').onclick = limpiarForm;
   document.getElementById('btnCancelar').onclick = limpiarForm;
 
@@ -260,19 +363,27 @@
     idActual = id;
     fotosNuevas = [];
     fotosExistentes = p.images && p.images.length ? [...p.images] : (p.img ? [p.img] : []);
+    ingredientesActuales = Array.isArray(p.ingredientes) ? JSON.parse(JSON.stringify(p.ingredientes)) : [];
     document.getElementById('formTitulo').textContent = 'Editando: ' + p.name;
     document.getElementById('f_name').value = p.name || '';
     document.getElementById('f_brand').value = p.brand || '';
     document.getElementById('f_ml').value = p.ml || '';
     document.getElementById('f_chip').value = p.chip || 'Diseñador';
     document.getElementById('f_categoria').value = p.categoria || 'nuevos';
-    document.getElementById('f_descripcion').value = p.descripcion || '';
+    document.getElementById('f_genero').value = p.genero || 'Unisex';
+    document.getElementById('f_descuento').checked = p.descuento !== undefined ? !!p.descuento : !!(p.priceOld || p.categoria === 'ofertas');
+    document.getElementById('f_stock').checked = p.stock !== false;
+    document.getElementById('f_notasSalida').value = p.notasSalida || '';
+    document.getElementById('f_notasCorazon').value = p.notasCorazon || '';
+    document.getElementById('f_notasFondo').value = p.notasFondo || '';
+    document.getElementById('f_moneda').value = p.moneda || 'ARS';
     document.getElementById('f_price').value = p.price || '';
     document.getElementById('f_priceOld').value = p.priceOld || '';
     document.getElementById('f_priceNew').value = p.priceNew || '';
     document.getElementById('f_off').value = p.off || '';
     toggleCategoriaCampos();
     renderFotosPreview();
+    renderIngredientes();
     document.getElementById('btnBorrar').classList.remove('hidden');
     document.getElementById('status').textContent = '';
   }
@@ -316,12 +427,25 @@
         ml: document.getElementById('f_ml').value.trim(),
         chip: document.getElementById('f_chip').value,
         categoria: cat,
-        descripcion: document.getElementById('f_descripcion').value.trim(),
+        genero: document.getElementById('f_genero').value,
+        moneda: document.getElementById('f_moneda').value,
+        descuento: document.getElementById('f_descuento').checked,
+        stock: document.getElementById('f_stock').checked,
+        notasSalida: document.getElementById('f_notasSalida').value.trim(),
+        notasCorazon: document.getElementById('f_notasCorazon').value.trim(),
+        notasFondo: document.getElementById('f_notasFondo').value.trim(),
         img: imagesFinal[0] || '',
         images: imagesFinal,
+        ingredientes: ingredientesActuales
+          .filter(i => i.nombre && i.nombre.trim())
+          .map(i => ({
+            nombre: i.nombre.trim(),
+            cantidad: Math.max(0, Math.min(100, Number(i.cantidad) || 0)),
+            color: i.color || '#c9a86a'
+          })),
         orden: (productos[id] && productos[id].orden) || Date.now(),
       };
-      if (cat === 'ofertas'){
+      if (document.getElementById('f_descuento').checked){
         doc.priceOld = document.getElementById('f_priceOld').value.trim();
         doc.priceNew = document.getElementById('f_priceNew').value.trim();
         doc.off = document.getElementById('f_off').value.trim();
