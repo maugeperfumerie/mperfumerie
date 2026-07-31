@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>M Perfumerie — Admin</title>
+<style>
+  :root{ --gold:#c9a227; --bg:#0b0b0b; --card:#161616; --border:#2a2a2a; }
+  *{box-sizing:border-box}
+  body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:#eee;margin:0;padding:20px}
+  h1{font-size:20px;color:var(--gold);margin-bottom:4px}
+  .muted{color:#999;font-size:13px;margin-bottom:20px}
+  #loginBox{max-width:340px;margin:60px auto;background:var(--card);padding:24px;border-radius:12px;border:1px solid var(--border)}
+  input,select,textarea{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:1px solid var(--border);background:#000;color:#eee;font-size:14px}
+  label{font-size:12px;color:#aaa;display:block;margin-top:10px}
+  button{background:var(--gold);color:#111;border:none;padding:10px 18px;border-radius:8px;font-weight:bold;cursor:pointer;margin-top:10px}
+  button.secondary{background:#333;color:#eee}
+  button.danger{background:#7a2323;color:#fff}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:8px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+  @media (max-width:800px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
+  .lista{display:flex;flex-direction:column;gap:8px;max-height:80vh;overflow:auto}
+  .item{display:flex;gap:10px;align-items:center;background:#111;border:1px solid var(--border);border-radius:8px;padding:8px;cursor:pointer}
+  .item:hover{border-color:var(--gold)}
+  .item img{width:44px;height:44px;object-fit:cover;border-radius:6px;background:#222}
+  .item .info{flex:1;min-width:0}
+  .item .info b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .item .info span{font-size:12px;color:#999}
+  .fotos-preview{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+  .fotos-preview .f{position:relative}
+  .fotos-preview img{width:70px;height:70px;object-fit:cover;border-radius:6px;border:1px solid var(--border)}
+  .fotos-preview button{position:absolute;top:-6px;right:-6px;background:#7a2323;color:#fff;border-radius:50%;width:20px;height:20px;padding:0;font-size:12px;line-height:1;margin:0}
+  #status{font-size:13px;margin-top:10px}
+  .hidden{display:none}
+  .row{display:flex;gap:10px}
+  .row > div{flex:1}
+  .ing-edit-row{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+  .ing-edit-row input[type=text]{flex:2;margin:0}
+  .ing-edit-row input[type=number]{flex:1;width:56px;margin:0}
+  .ing-edit-row input[type=color]{width:38px;height:36px;padding:2px;flex-shrink:0;margin:0}
+  .ing-edit-row button{padding:6px 9px;margin:0;font-size:12px;flex-shrink:0}
+  .ing-hint{font-size:11px;color:#777;margin:2px 0 6px}
+</style>
+</head>
+<body>
+
+<div id="loginBox">
+  <h1>M Perfumerie — Admin</h1>
+  <p class="muted">Iniciá sesión para editar los productos</p>
+  <input id="loginEmail" type="email" placeholder="Email">
+  <input id="loginPass" type="password" placeholder="Contraseña">
+  <button id="btnLogin" style="width:100%">Entrar</button>
+  <div id="loginError" class="muted" style="color:#e57373"></div>
+</div>
+
+<div id="panel" class="hidden">
+  <div class="topbar">
+    <div>
+      <h1>M Perfumerie — Admin</h1>
+      <p class="muted" id="userEmail"></p>
+    </div>
+    <button class="secondary" id="btnLogout">Cerrar sesión</button>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="topbar" style="margin-bottom:10px">
+        <b>Productos</b>
+        <button id="btnNuevo">+ Producto nuevo</button>
+      </div>
+      <div class="lista" id="lista"></div>
+    </div>
+
+    <div class="card">
+      <b id="formTitulo">Nuevo producto</b>
+      <form id="form">
+        <label>Nombre</label>
+        <input id="f_name" required>
+
+        <label>Marca</label>
+        <input id="f_brand" required>
+
+        <div class="row">
+          <div>
+            <label>ML</label>
+            <input id="f_ml" placeholder="100 ml">
+          </div>
+          <div>
+            <label>Tipo (chip)</label>
+            <select id="f_chip">
+              <option>Diseñador</option>
+              <option>Árabe</option>
+            </select>
+          </div>
+        </div>
+
+        <label>¿Dónde mostrar?</label>
+        <select id="f_categoria">
+          <option value="ofertas">Ofertas</option>
+          <option value="nuevos">Nuevos ingresos</option>
+          <option value="tendencias">Tendencias</option>
+          <option value="ninguna">Ninguna (solo en Todos los productos / búsqueda)</option>
+        </select>
+
+        <label>Género</label>
+        <select id="f_genero">
+          <option value="Hombre">Hombre</option>
+          <option value="Mujer">Mujer</option>
+          <option value="Unisex">Unisex</option>
+        </select>
+
+        <label style="display:flex; align-items:center; gap:8px; margin-top:14px;">
+          <input type="checkbox" id="f_descuento" style="width:auto; margin:0;">
+          Tiene descuento (muestra precio tachado + % OFF)
+        </label>
+
+        <label style="display:flex; align-items:center; gap:8px; margin-top:10px;">
+          <input type="checkbox" id="f_stock" style="width:auto; margin:0;" checked>
+          Hay stock
+        </label>
+        <p class="ing-hint">Si lo destildás, el producto deja de aparecer en Ofertas/Nuevos ingresos/Tendencias y en el inicio, pero se sigue pudiendo encontrar (marcado "Sin stock") en Todos los productos, en la búsqueda y en su marca.</p>
+
+        <label>Moneda</label>
+        <select id="f_moneda">
+          <option value="ARS">$ Peso argentino</option>
+          <option value="USD">US$ Dólar</option>
+          <option value="EUR">€ Euro</option>
+        </select>
+
+        <div id="precioSimple">
+          <label>Precio</label>
+          <input id="f_price" placeholder="$100.000" inputmode="numeric">
+        </div>
+        <div id="precioOferta" class="hidden">
+          <label>Precio inicial</label>
+          <input id="f_priceOld" placeholder="$250.000" inputmode="numeric">
+          <label>Descuento</label>
+          <select id="f_descuentoPct">
+            <option value="">Elegí un %</option>
+            <option value="10">10%</option>
+            <option value="15">15%</option>
+            <option value="20">20%</option>
+            <option value="25">25%</option>
+            <option value="30">30%</option>
+            <option value="35">35%</option>
+            <option value="40">40%</option>
+            <option value="50">50%</option>
+            <option value="60">60%</option>
+          </select>
+          <div class="row">
+            <div>
+              <label>Precio con descuento</label>
+              <input id="f_priceNew" placeholder="Se calcula solo" readonly>
+            </div>
+            <div>
+              <label>Texto del descuento</label>
+              <input id="f_off" placeholder="Se calcula solo" readonly>
+            </div>
+          </div>
+          <p class="ing-hint">Cargá el precio inicial, elegí el % de descuento, y el precio final y el cartel de "% OFF" se calculan solos.</p>
+        </div>
+
+        <label>Ingredientes (el primero es el principal — queda arriba con la barra más larga)</label>
+        <p class="ing-hint">Nombre, % de la barra (0-100) y color. El orden en que los agregás es el orden en que se muestran.</p>
+        <div id="ingList"></div>
+        <button type="button" class="secondary" id="btnAddIng">+ Agregar ingrediente</button>
+
+        <label>Notas de salida</label>
+        <textarea id="f_notasSalida" rows="2" placeholder="Ej: limón siciliano, bergamota"></textarea>
+        <label>Notas de corazón</label>
+        <textarea id="f_notasCorazon" rows="2" placeholder="Ej: manzana, jazmín"></textarea>
+        <label>Notas de fondo</label>
+        <textarea id="f_notasFondo" rows="2" placeholder="Ej: almizcle, madera de cedro"></textarea>
+        <p class="ing-hint">Estas notas aparecen en la pestaña "Ingredientes" de la ficha del producto.</p>
+
+        <label>Descripción</label>
+        <textarea id="f_descripcion" rows="4" placeholder="Ej: incluye estuche y mini perfume de regalo, o cualquier detalle del producto que quieras contarle al cliente"></textarea>
+        <p class="ing-hint">Aparece en la pestaña "Descripción" de la ficha del producto. Usalo para contar qué trae el perfume (si es un set, qué incluye, etc.).</p>
+
+        <label>Fotos (la primera es la principal, foto de estudio)</label>
+        <div class="fotos-preview" id="fotosPreview"></div>
+        <input type="file" id="f_fotos" accept="image/*" multiple>
+
+        <div id="status"></div>
+
+        <div class="row" style="margin-top:16px">
+          <button type="submit" id="btnGuardar">Guardar</button>
+          <button type="button" class="danger hidden" id="btnBorrar">Borrar producto</button>
+          <button type="button" class="secondary" id="btnCancelar">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDBF1-sWewJFajphKUhBBc1CVRaITsk4Ho",
+    authDomain: "m-perfumerie.firebaseapp.com",
+    projectId: "m-perfumerie",
+    storageBucket: "m-perfumerie.firebasestorage.app",
+    messagingSenderId: "853092893101",
+    appId: "1:853092893101:web:19a836b74ae0393f78e124",
+    measurementId: "G-L670S5FL0E"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+  const storage = firebase.storage();
+
+  // ---------- Login ----------
+  document.getElementById('btnLogin').onclick = async () => {
+    const email = document.getElementById('loginEmail').value;
+    const pass = document.getElementById('loginPass').value;
+    try{
+      await auth.signInWithEmailAndPassword(email, pass);
+    }catch(e){
+      document.getElementById('loginError').textContent = 'No se pudo iniciar sesión: ' + e.message;
+    }
+  };
+  document.getElementById('btnLogout').onclick = () => auth.signOut();
+
+  auth.onAuthStateChanged(user => {
+    document.getElementById('loginBox').classList.toggle('hidden', !!user);
+    document.getElementById('panel').classList.toggle('hidden', !user);
+    if (user){
+      document.getElementById('userEmail').textContent = user.email;
+      cargarLista();
+    }
+  });
+
+  // ---------- Utilidades ----------
+  function slugify(str){
+    return str.toString().toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+  }
+
+  let productos = {};
+  let idActual = null;
+  let fotosNuevas = []; // File objects pendientes de subir
+  let fotosExistentes = []; // URLs ya subidas (se mantienen si no se borran)
+  let ingredientesActuales = []; // [{nombre, cantidad, color}]
+
+  async function cargarLista(){
+    const snap = await db.collection('productos').orderBy('orden','asc').get();
+    productos = {};
+    const lista = document.getElementById('lista');
+    lista.innerHTML = '';
+    snap.forEach(doc => {
+      const p = doc.data();
+      productos[doc.id] = p;
+      const div = document.createElement('div');
+      div.className = 'item';
+      div.innerHTML = `<img src="${p.img || ''}"><div class="info"><b>${p.name}</b><span>${p.brand} · ${p.categoria === 'ofertas' ? (p.priceNew||'') : (p.price||'')}</span></div>`;
+      div.onclick = () => editarProducto(doc.id);
+      lista.appendChild(div);
+    });
+  }
+
+  function toggleCategoriaCampos(){
+    const tieneDescuento = document.getElementById('f_descuento').checked;
+    document.getElementById('precioSimple').classList.toggle('hidden', tieneDescuento);
+    document.getElementById('precioOferta').classList.toggle('hidden', !tieneDescuento);
+  }
+  document.getElementById('f_descuento').onchange = toggleCategoriaCampos;
+
+  // ---------- auto-formateo de precios: puntos de miles + símbolo de moneda ----------
+  const monedaSimbolos = { ARS: '$', USD: 'US$', EUR: '€' };
+  function simboloActual(){
+    return monedaSimbolos[document.getElementById('f_moneda').value] || '$';
+  }
+  function formatearPrecio(input){
+    const digitos = input.value.replace(/[^\d]/g, '');
+    input.value = digitos ? simboloActual() + Number(digitos).toLocaleString('es-AR') : '';
+  }
+  const camposPrecio = ['f_price', 'f_priceOld'];
+  camposPrecio.forEach(id => {
+    const input = document.getElementById(id);
+    input.addEventListener('input', () => formatearPrecio(input));
+  });
+
+  // ---------- cálculo automático del precio con descuento ----------
+  function calcularDescuento(){
+    const pct = Number(document.getElementById('f_descuentoPct').value);
+    const oldDigits = document.getElementById('f_priceOld').value.replace(/[^\d]/g, '');
+    if(!pct || !oldDigits){
+      document.getElementById('f_priceNew').value = '';
+      document.getElementById('f_off').value = pct ? pct + '% OFF' : '';
+      return;
+    }
+    const oldNum = Number(oldDigits);
+    const newNum = Math.round(oldNum * (1 - pct / 100));
+    document.getElementById('f_priceNew').value = simboloActual() + newNum.toLocaleString('es-AR');
+    document.getElementById('f_off').value = pct + '% OFF';
+  }
+  document.getElementById('f_priceOld').addEventListener('input', calcularDescuento);
+  document.getElementById('f_descuentoPct').addEventListener('change', calcularDescuento);
+
+  document.getElementById('f_moneda').addEventListener('change', () => {
+    camposPrecio.forEach(id => formatearPrecio(document.getElementById(id)));
+    calcularDescuento();
+  });
+
+  function limpiarForm(){
+    idActual = null;
+    fotosNuevas = [];
+    fotosExistentes = [];
+    ingredientesActuales = [];
+    document.getElementById('form').reset();
+    document.getElementById('formTitulo').textContent = 'Nuevo producto';
+    document.getElementById('btnBorrar').classList.add('hidden');
+    document.getElementById('status').textContent = '';
+    renderFotosPreview();
+    renderIngredientes();
+    toggleCategoriaCampos();
+  }
+
+  function renderFotosPreview(){
+    const cont = document.getElementById('fotosPreview');
+    cont.innerHTML = '';
+    fotosExistentes.forEach((url, i) => {
+      const div = document.createElement('div');
+      div.className = 'f';
+      div.innerHTML = `<img src="${url}"><button type="button" data-i="${i}">×</button>`;
+      div.querySelector('button').onclick = () => { fotosExistentes.splice(i,1); renderFotosPreview(); };
+      cont.appendChild(div);
+    });
+    fotosNuevas.forEach((file, i) => {
+      const url = URL.createObjectURL(file);
+      const div = document.createElement('div');
+      div.className = 'f';
+      div.innerHTML = `<img src="${url}"><button type="button" data-i="${i}">×</button>`;
+      div.querySelector('button').onclick = () => { fotosNuevas.splice(i,1); renderFotosPreview(); };
+      cont.appendChild(div);
+    });
+  }
+
+  document.getElementById('f_fotos').onchange = (e) => {
+    fotosNuevas = fotosNuevas.concat(Array.from(e.target.files));
+    e.target.value = '';
+    renderFotosPreview();
+  };
+
+  function renderIngredientes(){
+    const cont = document.getElementById('ingList');
+    cont.innerHTML = '';
+    ingredientesActuales.forEach((ing, i) => {
+      const div = document.createElement('div');
+      div.className = 'ing-edit-row';
+      div.innerHTML = `
+        <input type="text" class="ing-nombre" placeholder="Nombre (ej: Vainilla)" value="${(ing.nombre||'').replace(/"/g,'&quot;')}">
+        <input type="number" class="ing-cantidad" min="0" max="100" value="${ing.cantidad ?? 50}">
+        <input type="color" class="ing-color" value="${ing.color || '#c9a86a'}">
+        <button type="button" class="secondary ing-up" title="Subir" ${i === 0 ? 'disabled' : ''}>↑</button>
+        <button type="button" class="secondary ing-down" title="Bajar" ${i === ingredientesActuales.length - 1 ? 'disabled' : ''}>↓</button>
+        <button type="button" class="danger ing-del" title="Borrar">×</button>`;
+      div.querySelector('.ing-nombre').oninput = (e) => { ingredientesActuales[i].nombre = e.target.value; };
+      div.querySelector('.ing-cantidad').oninput = (e) => { ingredientesActuales[i].cantidad = e.target.value; };
+      div.querySelector('.ing-color').oninput = (e) => { ingredientesActuales[i].color = e.target.value; };
+      div.querySelector('.ing-up').onclick = () => {
+        if (i === 0) return;
+        [ingredientesActuales[i-1], ingredientesActuales[i]] = [ingredientesActuales[i], ingredientesActuales[i-1]];
+        renderIngredientes();
+      };
+      div.querySelector('.ing-down').onclick = () => {
+        if (i === ingredientesActuales.length - 1) return;
+        [ingredientesActuales[i+1], ingredientesActuales[i]] = [ingredientesActuales[i], ingredientesActuales[i+1]];
+        renderIngredientes();
+      };
+      div.querySelector('.ing-del').onclick = () => {
+        ingredientesActuales.splice(i, 1);
+        renderIngredientes();
+      };
+      cont.appendChild(div);
+    });
+  }
+
+  document.getElementById('btnAddIng').onclick = () => {
+    ingredientesActuales.push({nombre:'', cantidad:50, color:'#c9a86a'});
+    renderIngredientes();
+  };
+
+  document.getElementById('btnNuevo').onclick = limpiarForm;
+  document.getElementById('btnCancelar').onclick = limpiarForm;
+
+  function editarProducto(id){
+    const p = productos[id];
+    idActual = id;
+    fotosNuevas = [];
+    fotosExistentes = p.images && p.images.length ? [...p.images] : (p.img ? [p.img] : []);
+    ingredientesActuales = Array.isArray(p.ingredientes) ? JSON.parse(JSON.stringify(p.ingredientes)) : [];
+    document.getElementById('formTitulo').textContent = 'Editando: ' + p.name;
+    document.getElementById('f_name').value = p.name || '';
+    document.getElementById('f_brand').value = p.brand || '';
+    document.getElementById('f_ml').value = p.ml || '';
+    document.getElementById('f_chip').value = p.chip || 'Diseñador';
+    document.getElementById('f_categoria').value = p.categoria || 'nuevos';
+    document.getElementById('f_genero').value = p.genero || 'Unisex';
+    document.getElementById('f_descuento').checked = p.descuento !== undefined ? !!p.descuento : !!(p.priceOld || p.categoria === 'ofertas');
+    document.getElementById('f_stock').checked = p.stock !== false;
+    document.getElementById('f_notasSalida').value = p.notasSalida || '';
+    document.getElementById('f_notasCorazon').value = p.notasCorazon || '';
+    document.getElementById('f_notasFondo').value = p.notasFondo || '';
+    document.getElementById('f_descripcion').value = p.descripcion || '';
+    document.getElementById('f_moneda').value = p.moneda || 'ARS';
+    document.getElementById('f_price').value = p.price || '';
+    document.getElementById('f_priceOld').value = p.priceOld || '';
+    document.getElementById('f_descuentoPct').value = p.descuentoPct || '';
+    document.getElementById('f_priceNew').value = p.priceNew || '';
+    document.getElementById('f_off').value = p.off || '';
+    toggleCategoriaCampos();
+    renderFotosPreview();
+    renderIngredientes();
+    document.getElementById('btnBorrar').classList.remove('hidden');
+    document.getElementById('status').textContent = '';
+  }
+
+  document.getElementById('btnBorrar').onclick = async () => {
+    if (!idActual) return;
+    if (!confirm('¿Seguro que querés borrar este producto? No se puede deshacer.')) return;
+    await db.collection('productos').doc(idActual).delete();
+    limpiarForm();
+    cargarLista();
+  };
+
+  document.getElementById('form').onsubmit = async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btnGuardar');
+    const status = document.getElementById('status');
+    btn.disabled = true;
+    status.textContent = 'Guardando...';
+    try{
+      const name = document.getElementById('f_name').value.trim();
+      const id = idActual || slugify(name);
+
+      // Subir fotos nuevas
+      const urlsSubidas = [];
+      for (let i = 0; i < fotosNuevas.length; i++){
+        status.textContent = `Subiendo foto ${i+1} de ${fotosNuevas.length}...`;
+        const file = fotosNuevas[i];
+        const path = `productos/${id}/${Date.now()}_${i}_${file.name}`;
+        const ref = storage.ref().child(path);
+        await ref.put(file);
+        const url = await ref.getDownloadURL();
+        urlsSubidas.push(url);
+      }
+
+      const imagesFinal = [...fotosExistentes, ...urlsSubidas];
+      const cat = document.getElementById('f_categoria').value;
+
+      const doc = {
+        name,
+        brand: document.getElementById('f_brand').value.trim(),
+        ml: document.getElementById('f_ml').value.trim(),
+        chip: document.getElementById('f_chip').value,
+        categoria: cat,
+        genero: document.getElementById('f_genero').value,
+        moneda: document.getElementById('f_moneda').value,
+        descuento: document.getElementById('f_descuento').checked,
+        stock: document.getElementById('f_stock').checked,
+        notasSalida: document.getElementById('f_notasSalida').value.trim(),
+        notasCorazon: document.getElementById('f_notasCorazon').value.trim(),
+        notasFondo: document.getElementById('f_notasFondo').value.trim(),
+        descripcion: document.getElementById('f_descripcion').value.trim(),
+        img: imagesFinal[0] || '',
+        images: imagesFinal,
+        ingredientes: ingredientesActuales
+          .filter(i => i.nombre && i.nombre.trim())
+          .map(i => ({
+            nombre: i.nombre.trim(),
+            cantidad: Math.max(0, Math.min(100, Number(i.cantidad) || 0)),
+            color: i.color || '#c9a86a'
+          })),
+        orden: (productos[id] && productos[id].orden) || Date.now(),
+      };
+      if (document.getElementById('f_descuento').checked){
+        doc.priceOld = document.getElementById('f_priceOld').value.trim();
+        doc.descuentoPct = document.getElementById('f_descuentoPct').value;
+        doc.priceNew = document.getElementById('f_priceNew').value.trim();
+        doc.off = document.getElementById('f_off').value.trim();
+      } else {
+        doc.price = document.getElementById('f_price').value.trim();
+      }
+
+      await db.collection('productos').doc(id).set(doc, {merge:true});
+      status.textContent = '✅ Guardado.';
+      await cargarLista();
+      limpiarForm();
+    }catch(err){
+      status.textContent = '❌ Error: ' + err.message;
+    }finally{
+      btn.disabled = false;
+    }
+  };
+
+  limpiarForm();
+</script>
+</body>
+</html>
