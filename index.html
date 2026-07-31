@@ -1373,6 +1373,22 @@
     ['touchend', 'touchcancel'].forEach(ev => row.addEventListener(ev, () => row.classList.remove('touch-active')));
   });
 
+  // al ir bajando y llegar por primera vez a cada título, el ícono hace su animación solo una vez;
+  // después de eso, solo se repite si lo tocás o pasás el mouse
+  if('IntersectionObserver' in window){
+    const titleObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if(entry.isIntersecting){
+          const row = entry.target;
+          row.classList.add('touch-active');
+          setTimeout(() => row.classList.remove('touch-active'), 1500);
+          titleObserver.unobserve(row);
+        }
+      });
+    }, { threshold: 0.55 });
+    document.querySelectorAll('.section-title-row').forEach(row => titleObserver.observe(row));
+  }
+
   // mobile menu toggle
   const burgerBtn = document.getElementById('burgerBtn');
   const mobileNav = document.getElementById('mobileNav');
