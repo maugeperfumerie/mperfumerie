@@ -2067,8 +2067,9 @@
     }
     const ingList = document.getElementById('pmIngList');
     if(Array.isArray(p.ingredientes) && p.ingredientes.length){
+      const rowH = 26;
       ingList.innerHTML = p.ingredientes.map(ing => `
-        <div class="ing-row">
+        <div class="ing-row" style="height:${rowH}px;">
           <div class="ing-bar-fill" style="width:${Math.max(0, Math.min(100, ing.cantidad || 0))}%; background:${ing.color || '#c9a86a'};">
             <span class="ing-name">${nameHtml(ing.nombre || '')}</span>
           </div>
