@@ -1535,11 +1535,17 @@
     function fitCards(){
       const w = row.clientWidth;
       if(!w) return;
-      const minCard = 190, maxCard = 250;
-      let n = Math.max(1, Math.round((w + gap) / (minCard + gap)));
+      const minCard = 140, maxCard = 240;
+      // empezar por la menor cantidad de columnas que evite que las tarjetas queden más anchas que el máximo
+      let n = Math.max(1, Math.ceil((w + gap) / (maxCard + gap)));
       let cardW = (w - gap * (n - 1)) / n;
-      while(cardW > maxCard && n < 8){ n++; cardW = (w - gap * (n - 1)) / n; }
+      // si con esa cantidad quedan muy chicas, achicar la cantidad de columnas
       while(cardW < minCard && n > 1){ n--; cardW = (w - gap * (n - 1)) / n; }
+      // en pantallas chicas (celular) nunca queda una sola tarjeta estirada: mínimo 2 por fila
+      if(w < 560 && n < 2 && (w - gap) / 2 >= 110){
+        n = 2;
+        cardW = (w - gap) / 2;
+      }
       row.style.gridAutoColumns = cardW + 'px';
     }
     fitCards();
