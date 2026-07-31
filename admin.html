@@ -92,9 +92,6 @@
             <select id="f_chip">
               <option>Diseñador</option>
               <option>Árabe</option>
-              <option>Importado</option>
-              <option>Lanzamiento</option>
-              <option>Pre-venta</option>
             </select>
           </div>
         </div>
@@ -137,18 +134,32 @@
           <input id="f_price" placeholder="$100.000" inputmode="numeric">
         </div>
         <div id="precioOferta" class="hidden">
+          <label>Precio inicial</label>
+          <input id="f_priceOld" placeholder="$250.000" inputmode="numeric">
+          <label>Descuento</label>
+          <select id="f_descuentoPct">
+            <option value="">Elegí un %</option>
+            <option value="10">10%</option>
+            <option value="15">15%</option>
+            <option value="20">20%</option>
+            <option value="25">25%</option>
+            <option value="30">30%</option>
+            <option value="35">35%</option>
+            <option value="40">40%</option>
+            <option value="50">50%</option>
+            <option value="60">60%</option>
+          </select>
           <div class="row">
             <div>
-              <label>Precio anterior</label>
-              <input id="f_priceOld" placeholder="$250.000" inputmode="numeric">
+              <label>Precio con descuento</label>
+              <input id="f_priceNew" placeholder="Se calcula solo" readonly>
             </div>
             <div>
-              <label>Precio con descuento</label>
-              <input id="f_priceNew" placeholder="$175.000" inputmode="numeric">
+              <label>Texto del descuento</label>
+              <input id="f_off" placeholder="Se calcula solo" readonly>
             </div>
           </div>
-          <label>Texto del descuento</label>
-          <input id="f_off" placeholder="30% OFF">
+          <p class="ing-hint">Cargá el precio inicial, elegí el % de descuento, y el precio final y el cartel de "% OFF" se calculan solos.</p>
         </div>
 
         <label>Ingredientes (el primero es el principal — queda arriba con la barra más larga)</label>
@@ -163,6 +174,10 @@
         <label>Notas de fondo</label>
         <textarea id="f_notasFondo" rows="2" placeholder="Ej: almizcle, madera de cedro"></textarea>
         <p class="ing-hint">Estas notas aparecen en la pestaña "Ingredientes" de la ficha del producto.</p>
+
+        <label>Descripción</label>
+        <textarea id="f_descripcion" rows="4" placeholder="Ej: incluye estuche y mini perfume de regalo, o cualquier detalle del producto que quieras contarle al cliente"></textarea>
+        <p class="ing-hint">Aparece en la pestaña "Descripción" de la ficha del producto. Usalo para contar qué trae el perfume (si es un set, qué incluye, etc.).</p>
 
         <label>Fotos (la primera es la principal, foto de estudio)</label>
         <div class="fotos-preview" id="fotosPreview"></div>
@@ -267,13 +282,32 @@
     const digitos = input.value.replace(/[^\d]/g, '');
     input.value = digitos ? simboloActual() + Number(digitos).toLocaleString('es-AR') : '';
   }
-  const camposPrecio = ['f_price', 'f_priceOld', 'f_priceNew'];
+  const camposPrecio = ['f_price', 'f_priceOld'];
   camposPrecio.forEach(id => {
     const input = document.getElementById(id);
     input.addEventListener('input', () => formatearPrecio(input));
   });
+
+  // ---------- cálculo automático del precio con descuento ----------
+  function calcularDescuento(){
+    const pct = Number(document.getElementById('f_descuentoPct').value);
+    const oldDigits = document.getElementById('f_priceOld').value.replace(/[^\d]/g, '');
+    if(!pct || !oldDigits){
+      document.getElementById('f_priceNew').value = '';
+      document.getElementById('f_off').value = pct ? pct + '% OFF' : '';
+      return;
+    }
+    const oldNum = Number(oldDigits);
+    const newNum = Math.round(oldNum * (1 - pct / 100));
+    document.getElementById('f_priceNew').value = simboloActual() + newNum.toLocaleString('es-AR');
+    document.getElementById('f_off').value = pct + '% OFF';
+  }
+  document.getElementById('f_priceOld').addEventListener('input', calcularDescuento);
+  document.getElementById('f_descuentoPct').addEventListener('change', calcularDescuento);
+
   document.getElementById('f_moneda').addEventListener('change', () => {
     camposPrecio.forEach(id => formatearPrecio(document.getElementById(id)));
+    calcularDescuento();
   });
 
   function limpiarForm(){
@@ -376,9 +410,11 @@
     document.getElementById('f_notasSalida').value = p.notasSalida || '';
     document.getElementById('f_notasCorazon').value = p.notasCorazon || '';
     document.getElementById('f_notasFondo').value = p.notasFondo || '';
+    document.getElementById('f_descripcion').value = p.descripcion || '';
     document.getElementById('f_moneda').value = p.moneda || 'ARS';
     document.getElementById('f_price').value = p.price || '';
     document.getElementById('f_priceOld').value = p.priceOld || '';
+    document.getElementById('f_descuentoPct').value = p.descuentoPct || '';
     document.getElementById('f_priceNew').value = p.priceNew || '';
     document.getElementById('f_off').value = p.off || '';
     toggleCategoriaCampos();
@@ -434,6 +470,7 @@
         notasSalida: document.getElementById('f_notasSalida').value.trim(),
         notasCorazon: document.getElementById('f_notasCorazon').value.trim(),
         notasFondo: document.getElementById('f_notasFondo').value.trim(),
+        descripcion: document.getElementById('f_descripcion').value.trim(),
         img: imagesFinal[0] || '',
         images: imagesFinal,
         ingredientes: ingredientesActuales
@@ -447,6 +484,7 @@
       };
       if (document.getElementById('f_descuento').checked){
         doc.priceOld = document.getElementById('f_priceOld').value.trim();
+        doc.descuentoPct = document.getElementById('f_descuentoPct').value;
         doc.priceNew = document.getElementById('f_priceNew').value.trim();
         doc.off = document.getElementById('f_off').value.trim();
       } else {
