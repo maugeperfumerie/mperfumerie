@@ -9,6 +9,15 @@
 <meta property="og:description" content="Perfumes importados originales, árabes y de diseñador. Todo 100% original.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://mperfumerie.com.ar">
+<meta property="og:image" content="https://mperfumerie.com.ar/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="M Perfumerie — Maison Parfum">
+<meta property="og:site_name" content="M Perfumerie">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="M Perfumerie — Perfumes importados">
+<meta name="twitter:description" content="Perfumes importados originales, árabes y de diseñador. Todo 100% original.">
+<meta name="twitter:image" content="https://mperfumerie.com.ar/og-image.jpg">
 <meta name="description" content="Perfumes importados originales, árabes y de diseñador. Todo 100% original.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Manrope:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
@@ -204,8 +213,9 @@
   }
   .pm-gallery{ background:#ffffff; display:flex; flex-direction:column; min-height:560px; }
   .pm-image{ flex:1; position:relative; display:flex; align-items:center; justify-content:center; padding:0; overflow:hidden; touch-action:pan-y; }
-  .pm-image img{ width:100%; height:100%; object-fit:cover; user-select:none; }
+  .pm-image img{ width:100%; height:100%; object-fit:cover; user-select:none; opacity:1; transition:opacity .15s ease; }
   .pm-image img.pm-img-studio{ object-fit:contain; }
+  .pm-image img.pm-img-loading{ opacity:0; }
   .pm-arrow{
     position:absolute; top:50%; transform:translateY(-50%); z-index:2; background:var(--white);
     border:1px solid rgba(10,9,8,0.12); width:34px; height:34px; border-radius:999px; cursor:pointer;
@@ -617,6 +627,17 @@
     font-size:9.5px; font-weight:800; letter-spacing:0.04em; text-transform:uppercase;
     padding:6px 12px; border-radius:2px;
   }
+  .hot-badge{
+    position:absolute; top:12px; right:12px; z-index:3;
+    font-size:15px; line-height:1; user-select:none; pointer-events:none;
+    filter:drop-shadow(0 0 1px rgba(255,70,40,.25));
+    animation: hotShine 2.8s ease-in-out infinite;
+  }
+  .hot-badge.hot-badge-modal{ top:16px; right:16px; font-size:19px; }
+  @keyframes hotShine{
+    0%, 100%{ filter:drop-shadow(0 0 1px rgba(255,70,40,.25)); opacity:.88; }
+    50%{ filter:drop-shadow(0 0 5px rgba(255,70,40,.75)); opacity:1; }
+  }
   .prod-img-wrap{ padding:0; background:#ffffff; position:relative; overflow:hidden; }
   .prod-img{ width:100%; height:170px; object-fit:contain; display:block; background:#ffffff; }
   .prod-img-overlay{ position:absolute; inset:0; opacity:0; transition:opacity .7s ease; }
@@ -942,6 +963,7 @@
           <svg viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="#0a0908" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
         <img id="pmImg" src="" alt="">
+        <div id="pmHotBadge"></div>
         <button class="pm-arrow pm-arrow-next" id="pmArrowNext" aria-label="Foto siguiente">
           <svg viewBox="0 0 24 24" fill="none"><path d="M9 5l7 7-7 7" stroke="#0a0908" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
@@ -1515,15 +1537,21 @@
   todosProductos.forEach(p => { allProducts[p.id] = p; });
 
   // plantilla compartida de tarjeta (se usa en ofertas, nuevos ingresos y resultados por marca)
+  function hotBadgeHtml(modal){
+    return `<span class="hot-badge${modal ? ' hot-badge-modal' : ''}" title="Tendencia">🔥</span>`;
+  }
+
   function cardHtml(b){
     const sinStock = b.stock === false;
     const badge = sinStock ? `<span class="sale-badge" style="background:rgba(10,9,8,0.75); color:#fff;">Sin stock</span>` : (b.off ? `<span class="sale-badge">${b.off}</span>` : '');
+    const hotBadge = b.topVentas ? hotBadgeHtml() : '';
     const priceHtml = b.priceOld
       ? `<div class="price-row"><span class="price-new">${b.priceNew}</span><span class="price-old">${b.priceOld}</span></div>`
       : `<div class="price-row"><span class="price-new">${b.price}</span></div>`;
     return `
       <div class="prod-card${sinStock ? ' sin-stock' : ''}" data-id="${b.id}">
         ${badge}
+        ${hotBadge}
         <div class="prod-img-wrap"><img class="prod-img" src="${b.img}" alt="${b.name}"></div>
         <div class="prod-body">
           <div class="prod-brand">${b.brand}</div>
@@ -1998,13 +2026,32 @@
   let pmCurrentQty = 1;
   let pmImages = [];
   let pmImageIndex = 0;
+  let pmImageLoadToken = 0;
+
+  function pmSetImage(src, isStudio){
+    const imgEl = document.getElementById('pmImg');
+    const myToken = ++pmImageLoadToken;
+    imgEl.classList.add('pm-img-loading');
+    const preloader = new Image();
+    preloader.onload = () => {
+      if(myToken !== pmImageLoadToken) return; // llegó una carga más nueva, descartar esta
+      imgEl.src = src;
+      imgEl.classList.toggle('pm-img-studio', !!isStudio);
+      imgEl.classList.remove('pm-img-loading');
+    };
+    preloader.onerror = () => {
+      if(myToken !== pmImageLoadToken) return;
+      imgEl.src = src;
+      imgEl.classList.toggle('pm-img-studio', !!isStudio);
+      imgEl.classList.remove('pm-img-loading');
+    };
+    preloader.src = src;
+  }
 
   function pmShowImage(i){
     if(!pmImages.length) return;
     pmImageIndex = (i + pmImages.length) % pmImages.length;
-    const imgEl = document.getElementById('pmImg');
-    imgEl.src = pmImages[pmImageIndex];
-    imgEl.classList.toggle('pm-img-studio', pmImageIndex < 2);
+    pmSetImage(pmImages[pmImageIndex], pmImageIndex < 2);
     document.querySelectorAll('.pm-thumb').forEach((b, idx) => b.classList.toggle('active', idx === pmImageIndex));
   }
 
@@ -2015,9 +2062,9 @@
     const cardImgSrc = cardEl ? cardEl.src : (p.img || '');
     pmImages = (p.images && p.images.length) ? p.images : [cardImgSrc];
     pmImageIndex = 0;
-    document.getElementById('pmImg').src = pmImages[0];
     document.getElementById('pmImg').alt = p.name;
-    document.getElementById('pmImg').classList.add('pm-img-studio');
+    pmSetImage(pmImages[0], true);
+    document.getElementById('pmHotBadge').innerHTML = p.topVentas ? hotBadgeHtml(true) : '';
 
     const imageWrap = document.querySelector('.pm-image');
     imageWrap.classList.toggle('has-multi', pmImages.length > 1);

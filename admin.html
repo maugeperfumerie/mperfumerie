@@ -122,6 +122,12 @@
         </label>
         <p class="ing-hint">Si lo destildás, el producto deja de aparecer en Ofertas/Nuevos ingresos/Tendencias y en el inicio, pero se sigue pudiendo encontrar (marcado "Sin stock") en Todos los productos, en la búsqueda y en su marca.</p>
 
+        <label style="display:flex; align-items:center; gap:8px; margin-top:10px;">
+          <input type="checkbox" id="f_topventas" style="width:auto; margin:0;">
+          🔥 Tendencia / más vendido (ícono animado en la esquina)
+        </label>
+        <p class="ing-hint">Independiente de "¿Dónde mostrar?": se puede tildar en cualquier producto, esté en Ofertas, Nuevos ingresos, Tendencias o Ninguna. Agrega un sello dorado animado en la esquina de la tarjeta y de la foto principal.</p>
+
         <label>Moneda</label>
         <select id="f_moneda">
           <option value="ARS">$ Peso argentino</option>
@@ -260,7 +266,7 @@
       productos[doc.id] = p;
       const div = document.createElement('div');
       div.className = 'item';
-      div.innerHTML = `<img src="${p.img || ''}"><div class="info"><b>${p.name}</b><span>${p.brand} · ${p.categoria === 'ofertas' ? (p.priceNew||'') : (p.price||'')}</span></div>`;
+      div.innerHTML = `<img src="${p.img || ''}"><div class="info"><b>${p.topVentas ? '🔥 ' : ''}${p.name}</b><span>${p.brand} · ${p.categoria === 'ofertas' ? (p.priceNew||'') : (p.price||'')}</span></div>`;
       div.onclick = () => editarProducto(doc.id);
       lista.appendChild(div);
     });
@@ -407,6 +413,7 @@
     document.getElementById('f_genero').value = p.genero || 'Unisex';
     document.getElementById('f_descuento').checked = p.descuento !== undefined ? !!p.descuento : !!(p.priceOld || p.categoria === 'ofertas');
     document.getElementById('f_stock').checked = p.stock !== false;
+    document.getElementById('f_topventas').checked = !!p.topVentas;
     document.getElementById('f_notasSalida').value = p.notasSalida || '';
     document.getElementById('f_notasCorazon').value = p.notasCorazon || '';
     document.getElementById('f_notasFondo').value = p.notasFondo || '';
@@ -467,6 +474,7 @@
         moneda: document.getElementById('f_moneda').value,
         descuento: document.getElementById('f_descuento').checked,
         stock: document.getElementById('f_stock').checked,
+        topVentas: document.getElementById('f_topventas').checked,
         notasSalida: document.getElementById('f_notasSalida').value.trim(),
         notasCorazon: document.getElementById('f_notasCorazon').value.trim(),
         notasFondo: document.getElementById('f_notasFondo').value.trim(),
