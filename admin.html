@@ -199,6 +199,26 @@
       </form>
     </div>
   </div>
+
+  <div class="card" style="margin-top:20px">
+    <div class="topbar" style="margin-bottom:10px">
+      <b>Importación masiva de perfumes</b>
+      <button type="button" class="secondary" id="btnToggleImportador">Mostrar / ocultar</button>
+    </div>
+    <div id="importadorBody" class="hidden">
+      <p class="ing-hint">Pegá acá el listado de precios (una línea por producto). El sistema detecta solo automáticamente marca, nombre, ml, tipo (Diseñador / Árabe si la línea empieza con "Arabes") y género, y descarta lo que no sea fragancia (maquillaje, skincare, cabello, accesorios, etc). Después podés revisar y destildar lo que no quieras importar antes de confirmar.</p>
+      <textarea id="f_importarTexto" rows="10" placeholder="Pegá acá el listado completo..."></textarea>
+      <label style="display:flex; align-items:center; gap:8px; margin-top:6px;">
+        <input type="checkbox" id="f_excluirEstuches" style="width:auto; margin:0;" checked>
+        Excluir líneas "ESTUCHE" (sets/regalo, suelen duplicar el perfume base)
+      </label>
+      <button type="button" id="btnAnalizarImport">Analizar listado</button>
+      <div id="importResumen" class="muted"></div>
+      <div id="importPreview" class="lista" style="max-height:50vh; margin-top:10px;"></div>
+      <button type="button" id="btnConfirmarImport" class="hidden"></button>
+      <div id="importStatus" class="muted" style="margin-top:8px;"></div>
+    </div>
+  </div>
 </div>
 
 <!-- Firebase SDK -->
@@ -505,6 +525,205 @@
       limpiarForm();
     }catch(err){
       status.textContent = '❌ Error: ' + err.message;
+    }finally{
+      btn.disabled = false;
+    }
+  };
+
+  // ================= Importación masiva de perfumes =================
+  document.getElementById('btnToggleImportador').onclick = () => {
+    document.getElementById('importadorBody').classList.toggle('hidden');
+  };
+
+  const TIPO_FRAGANCIA_RE = /\b(EDT|EDP|EDC|PARFUM|COLONIA|ELIXIR)\b/i;
+
+  function parsearPrecioNumero(str){
+    const s = str.trim();
+    if (/^\d{1,3}(,\d{3})*\.\d{1,2}$/.test(s)) return Math.round(parseFloat(s.replace(/,/g,'')));
+    if (/^\d+\.\d{1,2}$/.test(s)) return Math.round(parseFloat(s));
+    const solo = s.replace(/[^\d]/g,'');
+    if (!solo) return null;
+    return Number(solo.length > 2 ? solo.slice(0,-2) : solo);
+  }
+
+  function detectarGenero(t){
+    const u = t.toUpperCase();
+    const esHombre = /\b(MEN|HOMME|HOMBRE|MAN)\b/.test(u) || u.includes('FOR HIM') || u.includes('POUR HOMME');
+    const esMujer = /\b(WOMAN|WOMEN|FEMME|MUJER|GIRL)\b/.test(u) || u.includes('FOR HER') || u.includes('POUR FEMME');
+    if (esHombre && !esMujer) return 'Hombre';
+    if (esMujer && !esHombre) return 'Mujer';
+    return 'Unisex';
+  }
+
+  function parsearLineaPrecio(linea){
+    const precioMatch = linea.match(/([\d]{1,3}(?:[.,]\d{3})*(?:[.,]\d{1,2})?)\s*$/);
+    if (!precioMatch) return null;
+    const precioNum = parsearPrecioNumero(precioMatch[1]);
+    if (!precioNum || precioNum <= 0) return null;
+
+    const textoSinPrecio = linea.slice(0, precioMatch.index).trim();
+    if (!textoSinPrecio) return null;
+    const palabras = textoSinPrecio.split(/\s+/);
+
+    let idxDetalle = -1;
+    for (let i = 0; i < palabras.length; i++){
+      const w = palabras[i];
+      if (w === w.toUpperCase() && w !== w.toLowerCase()){ idxDetalle = i; break; }
+    }
+    if (idxDetalle === -1) return null;
+
+    const antes = palabras.slice(0, idxDetalle);
+    const antesFiltrado = antes.filter(w => /[a-zA-Z0-9]/.test(w));
+    let detalle = palabras.slice(idxDetalle);
+    if (!detalle.length) return null;
+
+    const esArabe = /^arabes$/i.test(palabras[0] || '');
+
+    let prefijoEstuche = '';
+    let detalleBase = detalle;
+    if (/^ESTUCHE$/i.test(detalle[0])){
+      prefijoEstuche = 'ESTUCHE ';
+      detalleBase = detalle.slice(1);
+      if (!detalleBase.length) return null;
+    }
+
+    let nMarca = 0;
+    const maxN = Math.min(antesFiltrado.length, detalleBase.length, 6);
+    for (let n = maxN; n >= 1; n--){
+      const finAntes = antesFiltrado.slice(antesFiltrado.length-n).join(' ').toLowerCase();
+      const inicioDetalle = detalleBase.slice(0,n).join(' ').toLowerCase();
+      if (finAntes === inicioDetalle){ nMarca = n; break; }
+    }
+
+    let marcaPalabras, nombrePalabras;
+    if (nMarca > 0){
+      marcaPalabras = detalleBase.slice(0, nMarca);
+      nombrePalabras = detalleBase.slice(nMarca);
+    } else {
+      marcaPalabras = antesFiltrado.length ? [antesFiltrado[antesFiltrado.length-1]] : [];
+      nombrePalabras = detalleBase;
+    }
+    if (!nombrePalabras.length) return null;
+
+    const marca = marcaPalabras.join(' ').trim();
+    let nombreCompleto = (prefijoEstuche + nombrePalabras.join(' ')).trim();
+    if (!marca || !nombreCompleto) return null;
+
+    let ml = '';
+    const mlMatch = nombreCompleto.match(/X\s*(\d+(?:[.,]\d+)?)\.?\s*(ML|GRS|GR|G)\b/i);
+    if (mlMatch){
+      ml = mlMatch[1].replace(',', '.') + ' ' + (mlMatch[2].toLowerCase().startsWith('gr') ? 'g' : 'ml');
+      nombreCompleto = (nombreCompleto.slice(0, mlMatch.index) + nombreCompleto.slice(mlMatch.index + mlMatch[0].length));
+    }
+    nombreCompleto = nombreCompleto.replace(/\s{2,}/g,' ').trim();
+    if (!nombreCompleto) return null;
+
+    const genero = detectarGenero(marca + ' ' + nombreCompleto);
+    const price = '$' + precioNum.toLocaleString('es-AR');
+
+    return {
+      marca, name: nombreCompleto, ml, genero,
+      chip: esArabe ? 'Árabe' : 'Diseñador',
+      price, moneda: 'ARS'
+    };
+  }
+
+  let importadosParaCargar = [];
+
+  document.getElementById('btnAnalizarImport').onclick = () => {
+    let texto = document.getElementById('f_importarTexto').value;
+    // arregla líneas que quedaron pegadas sin salto al copiar del PDF (precio seguido directo de la próxima letra)
+    texto = texto.replace(/(\.\d{2})(?=\p{L})/gu, '$1\n');
+    const excluirEstuches = document.getElementById('f_excluirEstuches').checked;
+    const lineas = texto.split('\n').map(l => l.trim()).filter(Boolean);
+
+    const resultados = [];
+    let descartadasNoFragancia = 0, descartadasEstuche = 0, descartadasSinParsear = 0;
+
+    lineas.forEach(linea => {
+      const r = parsearLineaPrecio(linea);
+      if (!r){ descartadasSinParsear++; return; }
+      if (!TIPO_FRAGANCIA_RE.test(linea)){ descartadasNoFragancia++; return; }
+      if (excluirEstuches && /^ESTUCHE\b/i.test(r.name)){ descartadasEstuche++; return; }
+      resultados.push(r);
+    });
+
+    importadosParaCargar = resultados;
+    document.getElementById('importResumen').textContent =
+      `${resultados.length} perfumes detectados · ${descartadasNoFragancia} descartadas (no son fragancias) · ` +
+      (excluirEstuches ? `${descartadasEstuche} descartadas (estuches) · ` : '') +
+      `${descartadasSinParsear} sin poder interpretar.`;
+
+    const preview = document.getElementById('importPreview');
+    preview.innerHTML = '';
+    resultados.forEach((r, i) => {
+      const div = document.createElement('div');
+      div.className = 'item';
+      div.style.cursor = 'default';
+      div.innerHTML = `
+        <input type="checkbox" data-idx="${i}" class="import-check" checked style="width:auto;flex-shrink:0;">
+        <div class="info">
+          <b>${r.marca} — ${r.name}${r.ml ? ' (' + r.ml + ')' : ''}</b>
+          <span>${r.chip} · ${r.genero} · ${r.price}</span>
+        </div>`;
+      preview.appendChild(div);
+    });
+
+    const btnConfirmar = document.getElementById('btnConfirmarImport');
+    btnConfirmar.classList.toggle('hidden', resultados.length === 0);
+    btnConfirmar.textContent = `Importar seleccionados (${resultados.length})`;
+  };
+
+  document.getElementById('btnConfirmarImport').onclick = async () => {
+    const btn = document.getElementById('btnConfirmarImport');
+    const status = document.getElementById('importStatus');
+    const checks = Array.from(document.querySelectorAll('.import-check'));
+    const seleccionados = checks.filter(c => c.checked).map(c => importadosParaCargar[Number(c.dataset.idx)]);
+    if (!seleccionados.length){ status.textContent = 'No hay productos seleccionados.'; return; }
+
+    btn.disabled = true;
+    const TAM_LOTE = 400;
+    let importados = 0;
+    try{
+      for (let i = 0; i < seleccionados.length; i += TAM_LOTE){
+        const lote = seleccionados.slice(i, i + TAM_LOTE);
+        status.textContent = `Importando ${i+1}–${Math.min(i+TAM_LOTE, seleccionados.length)} de ${seleccionados.length}...`;
+        const batch = db.batch();
+        lote.forEach(r => {
+          const ref = db.collection('productos').doc();
+          batch.set(ref, {
+            name: r.name,
+            brand: r.marca,
+            ml: r.ml,
+            chip: r.chip,
+            categoria: 'ninguna',
+            genero: r.genero,
+            moneda: r.moneda,
+            descuento: false,
+            stock: true,
+            topVentas: false,
+            notasSalida: '',
+            notasCorazon: '',
+            notasFondo: '',
+            descripcion: '',
+            img: '',
+            images: [],
+            ingredientes: [],
+            price: r.price,
+            orden: Date.now()
+          });
+        });
+        await batch.commit();
+        importados += lote.length;
+      }
+      status.textContent = `✅ Se importaron ${importados} perfumes. Ya podés buscarlos en "Todos los productos" y sumarles fotos y detalles de a poco.`;
+      document.getElementById('f_importarTexto').value = '';
+      document.getElementById('importPreview').innerHTML = '';
+      document.getElementById('importResumen').textContent = '';
+      btn.classList.add('hidden');
+      await cargarLista();
+    }catch(err){
+      status.textContent = '❌ Error al importar: ' + err.message;
     }finally{
       btn.disabled = false;
     }
