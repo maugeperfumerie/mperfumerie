@@ -1107,7 +1107,31 @@
   </div>
 </section>
 
-<section class="products home-flow" id="ofertas">
+<section class="products home-flow" id="tendencias">
+  <div class="wrap" style="position:relative;">
+    <div class="section-head" style="margin-bottom:44px;">
+      <span class="eyebrow on-light">Lo más elegido</span>
+      <div class="section-title-row">
+        <span class="title-icon icon-tendencias" aria-hidden="true"><svg viewBox="0 0 30 30" fill="none"><path class="spark-big" d="M13 2c.7 4.2 2 6.7 3.8 8.5 1.8 1.8 4.3 3.1 8.5 3.8-4.2.7-6.7 2-8.5 3.8-1.8 1.8-3.1 4.3-3.8 8.5-.7-4.2-2-6.7-3.8-8.5C7.4 16.3 4.9 15 .7 14.3c4.2-.7 6.7-2 8.5-3.8C11 8.7 12.3 6.2 13 2Z" fill="#c9974e"/><path class="spark-small" d="M22.5 18.5c.35 1.9.9 3 1.75 3.85.85.85 1.95 1.4 3.85 1.75-1.9.35-3 .9-3.85 1.75-.85.85-1.4 1.95-1.75 3.85-.35-1.9-.9-3-1.75-3.85-.85-.85-1.95-1.4-3.85-1.75 1.9-.35 3-.9 3.85-1.75.85-.85 1.4-1.95 1.75-3.85Z" fill="#f0ce95"/></svg></span>
+        <h2>Tendencias</h2>
+        <span class="title-icon icon-tendencias" aria-hidden="true"><svg viewBox="0 0 30 30" fill="none"><path class="spark-big" d="M13 2c.7 4.2 2 6.7 3.8 8.5 1.8 1.8 4.3 3.1 8.5 3.8-4.2.7-6.7 2-8.5 3.8-1.8 1.8-3.1 4.3-3.8 8.5-.7-4.2-2-6.7-3.8-8.5C7.4 16.3 4.9 15 .7 14.3c4.2-.7 6.7-2 8.5-3.8C11 8.7 12.3 6.2 13 2Z" fill="#c9974e"/><path class="spark-small" d="M22.5 18.5c.35 1.9.9 3 1.75 3.85.85.85 1.95 1.4 3.85 1.75-1.9.35-3 .9-3.85 1.75-.85.85-1.4 1.95-1.75 3.85-.35-1.9-.9-3-1.75-3.85-.85-.85-1.95-1.4-3.85-1.75 1.9-.35 3-.9 3.85-1.75.85-.85 1.4-1.95 1.75-3.85Z" fill="#f0ce95"/></svg></span>
+      </div>
+    </div>
+    <div class="prod-row-wrap">
+      <button type="button" class="row-more-link" data-cat="tendencias">Ver más</button>
+      <button type="button" class="row-arrow row-arrow-prev hidden" aria-label="Ver anteriores">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="#0a0908" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="prod-row prod-row-2rows" id="tendenciasGrid"></div>
+      <button type="button" class="row-arrow row-arrow-next" aria-label="Ver siguientes">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M9 5l7 7-7 7" stroke="#0a0908" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+    <div class="catalog-empty" id="tendenciasEmpty" style="display:none;">Próximamente.</div>
+  </div>
+</section>
+
+<section class="products home-flow" id="ofertas" style="padding-top:0;">
   <div class="wrap" style="position:relative;">
     <div class="section-head" style="margin-bottom:44px;">
       <span class="eyebrow on-light">Descuentos activos</span>
@@ -1150,30 +1174,6 @@
         <svg viewBox="0 0 24 24" fill="none"><path d="M9 5l7 7-7 7" stroke="#0a0908" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
     </div>
-  </div>
-</section>
-
-<section class="products home-flow" id="tendencias" style="padding-top:0;">
-  <div class="wrap" style="position:relative;">
-    <div class="section-head" style="margin-bottom:44px;">
-      <span class="eyebrow on-light">Lo más elegido</span>
-      <div class="section-title-row">
-        <span class="title-icon icon-tendencias" aria-hidden="true"><svg viewBox="0 0 30 30" fill="none"><path class="spark-big" d="M13 2c.7 4.2 2 6.7 3.8 8.5 1.8 1.8 4.3 3.1 8.5 3.8-4.2.7-6.7 2-8.5 3.8-1.8 1.8-3.1 4.3-3.8 8.5-.7-4.2-2-6.7-3.8-8.5C7.4 16.3 4.9 15 .7 14.3c4.2-.7 6.7-2 8.5-3.8C11 8.7 12.3 6.2 13 2Z" fill="#c9974e"/><path class="spark-small" d="M22.5 18.5c.35 1.9.9 3 1.75 3.85.85.85 1.95 1.4 3.85 1.75-1.9.35-3 .9-3.85 1.75-.85.85-1.4 1.95-1.75 3.85-.35-1.9-.9-3-1.75-3.85-.85-.85-1.95-1.4-3.85-1.75 1.9-.35 3-.9 3.85-1.75.85-.85 1.4-1.95 1.75-3.85Z" fill="#f0ce95"/></svg></span>
-        <h2>Tendencias</h2>
-        <span class="title-icon icon-tendencias" aria-hidden="true"><svg viewBox="0 0 30 30" fill="none"><path class="spark-big" d="M13 2c.7 4.2 2 6.7 3.8 8.5 1.8 1.8 4.3 3.1 8.5 3.8-4.2.7-6.7 2-8.5 3.8-1.8 1.8-3.1 4.3-3.8 8.5-.7-4.2-2-6.7-3.8-8.5C7.4 16.3 4.9 15 .7 14.3c4.2-.7 6.7-2 8.5-3.8C11 8.7 12.3 6.2 13 2Z" fill="#c9974e"/><path class="spark-small" d="M22.5 18.5c.35 1.9.9 3 1.75 3.85.85.85 1.95 1.4 3.85 1.75-1.9.35-3 .9-3.85 1.75-.85.85-1.4 1.95-1.75 3.85-.35-1.9-.9-3-1.75-3.85-.85-.85-1.95-1.4-3.85-1.75 1.9-.35 3-.9 3.85-1.75.85-.85 1.4-1.95 1.75-3.85Z" fill="#f0ce95"/></svg></span>
-      </div>
-    </div>
-    <div class="prod-row-wrap">
-      <button type="button" class="row-more-link" data-cat="tendencias">Ver más</button>
-      <button type="button" class="row-arrow row-arrow-prev hidden" aria-label="Ver anteriores">
-        <svg viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="#0a0908" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
-      <div class="prod-row prod-row-2rows" id="tendenciasGrid"></div>
-      <button type="button" class="row-arrow row-arrow-next" aria-label="Ver siguientes">
-        <svg viewBox="0 0 24 24" fill="none"><path d="M9 5l7 7-7 7" stroke="#0a0908" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
-    </div>
-    <div class="catalog-empty" id="tendenciasEmpty" style="display:none;">Próximamente.</div>
   </div>
 </section>
 
