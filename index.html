@@ -472,6 +472,7 @@
     display:flex; align-items:center; justify-content:center; gap:8px; pointer-events:none;
   }
   .hero-dots.hidden{ display:none; }
+  @media (max-width:640px){ .hero-dots{ bottom:18px; } }
   .hero-dot{
     width:7px; height:7px; border-radius:999px; background:rgba(250,248,245,0.4); border:0; padding:0; cursor:pointer;
     transition:background .25s ease, width .25s ease; pointer-events:auto;
@@ -1683,9 +1684,12 @@
     const dots = dotsWrap ? Array.from(dotsWrap.children) : [];
 
     function go(i){
-      index = (i + slides.length) % slides.length;
+      // el slide principal (0) es siempre el primero: no se puede volver antes de él, solo avanzar
+      if(i < 0) i = 0;
+      index = i % slides.length;
       track.style.transform = `translateX(-${index * 100}%)`;
       dots.forEach((d, di) => d.classList.toggle('active', di === index));
+      if(slides.length > 1 && prevBtn) prevBtn.classList.toggle('hidden', index === 0);
     }
 
     if(slides.length > 1){
