@@ -20,7 +20,7 @@
 <meta name="twitter:image" content="https://mperfumerie.com.ar/og-image.jpg">
 <meta name="description" content="Perfumes importados originales, árabes y de diseñador. Todo 100% original.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Manrope:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Manrope:wght@300;400;500;600;700;800&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Space+Grotesk:wght@500;600;700&family=Italianno&display=swap" rel="stylesheet">
 <style>
   :root{
     --black:#0a0908;
@@ -256,12 +256,19 @@
     padding:5px 10px; border-radius:2px; margin-bottom:12px;
   }
   .pm-info h3{ font-family:var(--display); font-size:26px; font-weight:700; text-transform:uppercase; letter-spacing:0.005em; color:var(--black); margin:6px 0 16px; line-height:1.22; }
-  .pm-size-row{ display:flex; align-items:center; gap:12px; margin-bottom:20px; }
+  .pm-size-row{ display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
   .pm-size-label{ font-family:var(--sans); font-size:11px; letter-spacing:0.06em; text-transform:uppercase; color:rgba(10,9,8,0.45); font-weight:700; }
   .pm-size-chip{
     display:inline-block; font-family:var(--sans); font-size:12px; font-weight:700; color:var(--white);
     background:var(--black); border-radius:999px; padding:7px 16px;
   }
+  button.pm-size-chip{
+    border:1.5px solid var(--black); background:transparent; color:var(--black);
+    cursor:pointer; transition:background .15s ease, color .15s ease;
+  }
+  button.pm-size-chip:hover{ background:rgba(10,9,8,0.08); }
+  button.pm-size-chip.active{ background:var(--black); color:var(--white); }
+  button.pm-size-chip.sin-stock-variant{ opacity:.4; text-decoration:line-through; }
   .pm-price-row{ justify-content:flex-start; gap:12px; margin-bottom:22px; }
   .pm-price-row .price-new{ font-size:21px; }
   .pm-price-row .price-old{ font-size:14px; }
@@ -447,13 +454,35 @@
       #e9c766 74%, #d4af37 100%);
     -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
   }
+  .hero-script{
+    font-family:'Italianno', cursive; font-weight:400; color:var(--white);
+    font-size:clamp(38px,7vw,60px); line-height:0.85; margin:0 0 2px; letter-spacing:0.01em;
+  }
+  .hero-title-stack{
+    display:flex; flex-direction:column; gap:0; margin:0 0 22px;
+    font-family:var(--sans); font-weight:800; letter-spacing:0.05em; text-transform:uppercase; line-height:1.08;
+  }
+  .hts-line{ font-size:clamp(30px,6.4vw,56px); color:var(--white); }
+  .hero-divider{ width:56px; height:2px; background:var(--gold-grad); margin:0 0 16px; }
+  .hero-kicker{
+    font-family:var(--sans); font-size:13px; letter-spacing:0.24em; text-transform:uppercase;
+    font-weight:700; color:var(--gold-1); margin:0 0 14px;
+  }
   .hero-desc{
-    position:relative; z-index:2; margin-top:20px; max-width:min(520px, 92%); width:100%;
+    position:relative; z-index:2; margin-top:0; max-width:min(480px, 92%); width:100%;
     font-family:'Cormorant Garamond', serif; font-size:18px; line-height:1.6; color:rgba(250,248,245,0.68); font-weight:500;
     letter-spacing:0.02em; white-space:normal;
   }
+  .hero-cta .hc-arrow{ display:inline-block; margin-left:6px; transition:transform .25s ease; }
+  .hero-cta:hover .hc-arrow{ transform:translateX(4px); }
   @media (max-width:520px){
     .hero-desc{ font-size:15px; line-height:1.55; }
+  }
+  @media (max-width:640px){
+    .hero-script{ font-size:clamp(30px,10vw,42px); }
+    .hts-line{ font-size:clamp(24px,9.5vw,34px); }
+    .hero-kicker{ font-size:11px; letter-spacing:0.18em; }
+    .hero-title-stack{ margin-bottom:16px; }
   }
   .hero .cta-row{
     position:relative; z-index:2; margin-top:26px; display:flex; gap:14px; flex-wrap:wrap; justify-content:flex-start;
@@ -1066,7 +1095,7 @@
         <span id="pmBrand"></span>
       </div>
       <h3 id="pmName"></h3>
-      <div class="pm-size-row">
+      <div class="pm-size-row" id="pmSizeRow">
         <span class="pm-size-chip" id="pmMl"></span>
       </div>
       <div class="price-row pm-price-row" id="pmPriceRow"></div>
@@ -1161,10 +1190,17 @@
       <div class="hero-art-scrim"></div>
       <div class="hero-content wrap">
         <img class="hero-logo-mark" src="images/img-02-bf96bbd8b9.png" alt="M Perfumerie">
-        <h1 class="hero-title">Perfumes de <em>diseñador</em> · <span class="ht-niche">niche</span> · <span class="ht-arabes">árabes</span></h1>
-        <p class="hero-desc" id="heroDesc">Perfumería importada en Rosario. Elegís el producto en la página y coordinás por WhatsApp el pago y el envío.</p>
+        <p class="hero-script">Perfumes de</p>
+        <h1 class="hero-title-stack">
+          <span class="hts-line">Diseñador</span>
+          <span class="hts-line">Niche</span>
+          <span class="hts-line">Árabes</span>
+        </h1>
+        <div class="hero-divider"></div>
+        <p class="hero-kicker">Perfumería importada en Rosario</p>
+        <p class="hero-desc" id="heroDesc">Elegís el producto en la página y coordinás por WhatsApp el pago y el envío.</p>
         <div class="cta-row">
-          <a class="btn-gold" href="#todos-productos" data-open="section:todos-productos">Ver catálogo</a>
+          <a class="btn-gold hero-cta" href="#todos-productos" data-open="section:todos-productos">Ver catálogo <span class="hc-arrow">→</span></a>
         </div>
       </div>
     </div>
@@ -1727,11 +1763,35 @@
   let tendenciasItems = [];
   let todosProductos = [];
 
+  // aplica los datos del tamaño (variante) elegido sobre el producto,
+  // para que todo el código que ya lee p.ml / p.price / p.stock, etc. siga funcionando igual
+  function applyVariant(p, variante){
+    p.ml = variante.ml || '';
+    p.price = variante.price || '';
+    p.priceOld = variante.priceOld || '';
+    p.priceNew = variante.priceNew || '';
+    p.off = variante.off || '';
+    p.descuento = !!variante.descuento;
+    p.descuentoPct = variante.descuentoPct || '';
+    p.stock = variante.stock !== false;
+  }
+  function normalizeProducto(p){
+    if(Array.isArray(p.variantes) && p.variantes.length){
+      applyVariant(p, p.variantes[0]);
+    }
+    return p;
+  }
+  function buildDescripcion(p, ml){
+    const genero = (p.genero || '').toLowerCase();
+    const mlTxt = ml || p.ml || '';
+    return `Incluye: Fragancia ${genero} ${p.name || ''} ${mlTxt}.`.replace(/\s+/g,' ').trim();
+  }
+
   (async function initSitio(){
   try {
   const snap = await db.collection('productos').orderBy('orden','asc').get();
   snap.forEach(doc => {
-    const p = Object.assign({id: doc.id}, doc.data());
+    const p = normalizeProducto(Object.assign({id: doc.id}, doc.data()));
     todosProductos.push(p);
     if(p.stock !== false){
       if (p.categoria === 'ofertas') ofertas.push(p);
@@ -2359,13 +2419,6 @@
       pmBrandEl.classList.remove('clickable');
     }
     document.getElementById('pmName').innerHTML = nameHtml(p.name);
-    document.getElementById('pmMl').textContent = p.ml || '';
-    const priceRow = document.getElementById('pmPriceRow');
-    if(p.priceOld){
-      priceRow.innerHTML = `<span class="price-new">${p.priceNew}</span><span class="price-old">${p.priceOld}</span><span class="sale-badge" style="position:static;">${p.off}</span>`;
-    } else {
-      priceRow.innerHTML = `<span class="price-new">${p.price}</span>`;
-    }
     const ingList = document.getElementById('pmIngList');
     if(Array.isArray(p.ingredientes) && p.ingredientes.length){
       const rowH = 26;
@@ -2385,18 +2438,60 @@
       <div class="notas-value">${nameHtml(p.notasCorazon || '')}</div>
       <div class="notas-label">Notas de fondo:</div>
       <div class="notas-value">${nameHtml(p.notasFondo || '')}</div>`;
-    const pmDescripcionEl = document.getElementById('pmDescripcion');
-    if(p.descripcion && p.descripcion.trim()){
-      pmDescripcionEl.innerHTML = `<div class="notas-value">${nameHtml(p.descripcion)}</div>`;
-    } else {
-      pmDescripcionEl.innerHTML = `<p style="font-size:13px; color:rgba(10,9,8,0.5); font-weight:300;">Estamos cargando la descripción de este perfume.</p>`;
-    }
     pmShowTab('acordes');
     document.getElementById('pmAddBtn').dataset.id = id;
 
+    pmCurrentProduct = p;
+    pmRenderSizeChips(p);
+    pmSelectVariant(p.ml);
+
+    document.getElementById('productModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  let pmCurrentProduct = null;
+  let pmCurrentVariantMl = null;
+
+  function pmRenderSizeChips(p){
+    const row = document.getElementById('pmSizeRow');
+    const variantes = (Array.isArray(p.variantes) && p.variantes.length)
+      ? p.variantes
+      : [{ ml: p.ml, price: p.price, priceOld: p.priceOld, priceNew: p.priceNew, off: p.off, descuento: p.descuento, stock: p.stock }];
+    if(variantes.length <= 1){
+      row.innerHTML = `<span class="pm-size-chip" id="pmMl">${variantes[0].ml || ''}</span>`;
+      return;
+    }
+    row.innerHTML = variantes.map(v => `
+      <button type="button" class="pm-size-chip${v.stock === false ? ' sin-stock-variant' : ''}" data-ml="${v.ml}">${v.ml}</button>
+    `).join('');
+    row.querySelectorAll('.pm-size-chip').forEach(btn => {
+      btn.addEventListener('click', () => pmSelectVariant(btn.dataset.ml));
+    });
+  }
+
+  function pmSelectVariant(ml){
+    const p = pmCurrentProduct;
+    if(!p) return;
+    const v = findVariant(p, ml) || {};
+    pmCurrentVariantMl = v.ml || ml || '';
+
+    document.querySelectorAll('#pmSizeRow .pm-size-chip').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.ml === pmCurrentVariantMl);
+    });
+
+    const priceRow = document.getElementById('pmPriceRow');
+    if(v.priceOld){
+      priceRow.innerHTML = `<span class="price-new">${v.priceNew}</span><span class="price-old">${v.priceOld}</span><span class="sale-badge" style="position:static;">${v.off || ''}</span>`;
+    } else {
+      priceRow.innerHTML = `<span class="price-new">${v.price || ''}</span>`;
+    }
+
+    const pmDescripcionEl = document.getElementById('pmDescripcion');
+    pmDescripcionEl.innerHTML = `<div class="notas-value">${nameHtml(buildDescripcion(p, pmCurrentVariantMl))}</div>`;
+
     const stockBadgeEl = document.getElementById('pmStockBadge');
     const addBtn = document.getElementById('pmAddBtn');
-    const inStock = p.stock !== false;
+    addBtn.dataset.ml = pmCurrentVariantMl;
+    const inStock = v.stock !== false;
     if(!inStock){
       stockBadgeEl.style.display = 'inline-block';
       document.getElementById('pmQty').style.opacity = '.4';
@@ -2414,13 +2509,11 @@
       pmCurrentQty = 1;
       pmUpdateQtyLimits();
     }
-
-    document.getElementById('productModal').classList.add('open');
-    document.body.style.overflow = 'hidden';
   }
+
   function pmUpdateQtyLimits(){
     const id = document.getElementById('pmAddBtn').dataset.id;
-    const already = cartQtyFor(id);
+    const already = cartQtyFor(id, pmCurrentVariantMl);
     const maxAddable = Math.max(0, MAX_QTY_PER_PRODUCT - already);
     const plusBtn = document.getElementById('pmQtyPlus');
     const minusBtn = document.getElementById('pmQtyMinus');
@@ -2502,7 +2595,7 @@
   });
   document.getElementById('pmQtyPlus').addEventListener('click', () => {
     const id = document.getElementById('pmAddBtn').dataset.id;
-    const maxAddable = Math.max(0, MAX_QTY_PER_PRODUCT - cartQtyFor(id));
+    const maxAddable = Math.max(0, MAX_QTY_PER_PRODUCT - cartQtyFor(id, pmCurrentVariantMl));
     const hint = document.getElementById('pmQtyHint');
     if(pmCurrentQty >= maxAddable){
       hint.textContent = 'Máximo 3';
@@ -2516,15 +2609,25 @@
   });
   document.getElementById('pmAddBtn').addEventListener('click', (e) => {
     if(pmCurrentQty <= 0) return;
-    addToCart(e.currentTarget.dataset.id, pmCurrentQty);
+    addToCart(e.currentTarget.dataset.id, pmCurrentVariantMl, pmCurrentQty);
     pmUpdateQtyLimits();
   });
 
   // ---------- CARRITO ----------
   const MAX_QTY_PER_PRODUCT = 3;
   let cart = [];
-  function cartQtyFor(id){
-    const e = cart.find(c => c.id === id);
+  function findVariant(p, ml){
+    if(!p) return null;
+    if(Array.isArray(p.variantes) && p.variantes.length){
+      return p.variantes.find(v => v.ml === ml) || p.variantes[0];
+    }
+    return { ml: p.ml, price: p.price, priceOld: p.priceOld, priceNew: p.priceNew, off: p.off, descuento: p.descuento, stock: p.stock };
+  }
+  function cartQtyFor(id, ml){
+    if(ml === undefined){
+      return cart.filter(c => c.id === id).reduce((s,c) => s + c.qty, 0);
+    }
+    const e = cart.find(c => c.id === id && c.ml === ml);
     return e ? e.qty : 0;
   }
 
@@ -2542,20 +2645,25 @@
     return '$' + n.toLocaleString('es-AR');
   }
 
-  function addToCart(id, qty){
+  function addToCart(id, ml, qty){
+    if(typeof ml === 'number'){ qty = ml; ml = undefined; } // compatibilidad: addToCart(id, qty)
+    if(ml === undefined){
+      const p = allProducts[id];
+      ml = p ? p.ml : '';
+    }
     qty = qty || 1;
-    const existing = cart.find(c => c.id === id);
+    const existing = cart.find(c => c.id === id && c.ml === ml);
     const already = existing ? existing.qty : 0;
     const toAdd = Math.max(0, Math.min(qty, MAX_QTY_PER_PRODUCT - already));
     if(toAdd > 0){
-      if(existing){ existing.qty += toAdd; } else { cart.push({id, qty: toAdd}); }
+      if(existing){ existing.qty += toAdd; } else { cart.push({id, ml, qty: toAdd}); }
       updateCartUI();
       openCart();
     }
     return toAdd;
   }
-  function removeFromCart(id){
-    cart = cart.filter(c => c.id !== id);
+  function removeFromCart(id, ml){
+    cart = cart.filter(c => !(c.id === id && c.ml === ml));
     updateCartUI();
   }
 
@@ -2579,19 +2687,20 @@
     body.innerHTML = cart.map(c => {
       const p = allProducts[c.id];
       if(!p) return '';
-      const unit = parsePrice(p.priceNew || p.price);
+      const v = findVariant(p, c.ml) || {};
+      const unit = parsePrice(v.priceNew || v.price);
       total += unit * c.qty;
       const imgEl = document.querySelector(`[data-id="${c.id}"] .prod-img`);
-      const imgSrc = imgEl ? imgEl.src : '';
+      const imgSrc = imgEl ? imgEl.src : (p.img || '');
       return `
         <div class="cart-item">
           <img src="${imgSrc}" alt="${p.name}">
           <div class="ci-info">
             <div class="ci-name">${nameHtml(p.name)}</div>
-            <div class="ci-meta">${p.ml || ''} · cant. ${c.qty}</div>
+            <div class="ci-meta">${c.ml || ''} · cant. ${c.qty}</div>
             <div class="ci-price">${money(unit * c.qty)}</div>
           </div>
-          <button class="ci-remove" data-id="${c.id}" aria-label="Quitar">
+          <button class="ci-remove" data-id="${c.id}" data-ml="${c.ml || ''}" aria-label="Quitar">
             <svg viewBox="0 0 24 24" fill="none"><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
           </button>
         </div>`;
@@ -2601,7 +2710,7 @@
       <a href="#" id="checkoutBtn" class="btn-gold cart-checkout-btn">Terminar compra</a>
     `;
     body.querySelectorAll('.ci-remove').forEach(btn => {
-      btn.addEventListener('click', () => removeFromCart(btn.dataset.id));
+      btn.addEventListener('click', () => removeFromCart(btn.dataset.id, btn.dataset.ml));
     });
     const checkoutBtn = document.getElementById('checkoutBtn');
     if(checkoutBtn){
@@ -2610,7 +2719,10 @@
         let msg = 'Hola! Quiero terminar mi compra:\n\n';
         cart.forEach(c => {
           const p = allProducts[c.id];
-          if(p) msg += `• ${p.name} (x${c.qty}) — ${money(parsePrice(p.priceNew || p.price) * c.qty)}\n`;
+          if(!p) return;
+          const v = findVariant(p, c.ml) || {};
+          const unit = parsePrice(v.priceNew || v.price);
+          msg += `• ${p.name} (${c.ml || ''}) (x${c.qty}) — ${money(unit * c.qty)}\n`;
         });
         msg += `\nTotal: ${money(total)}\n\nhttps://mperfumerie.com.ar\n\n¡Quiero terminar mi compra!`;
         openWhatsappConfirm('https://wa.me/5493416052132?text=' + encodeURIComponent(msg));
