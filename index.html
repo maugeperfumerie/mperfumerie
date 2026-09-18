@@ -438,6 +438,15 @@
     font-size:clamp(30px,5vw,60px); line-height:1; letter-spacing:-0.01em; max-width:15ch;
   }
   .hero-title em{ font-style:italic; color:var(--gold-2); font-weight:300; }
+  .hero-title .ht-niche{ color:rgba(250,248,245,0.7); }
+  .hero-title .ht-arabes{
+    color:#d4af37;
+    background:linear-gradient(135deg,
+      #d4af37 0%, #e9c766 26%,
+      rgba(90,86,80,0.8) 46%, rgba(90,86,80,0.8) 54%,
+      #e9c766 74%, #d4af37 100%);
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+  }
   .hero-desc{
     position:relative; z-index:2; margin-top:20px; max-width:min(520px, 92%); width:100%;
     font-family:'Cormorant Garamond', serif; font-size:18px; line-height:1.6; color:rgba(250,248,245,0.68); font-weight:500;
@@ -1152,7 +1161,7 @@
       <div class="hero-art-scrim"></div>
       <div class="hero-content wrap">
         <img class="hero-logo-mark" src="images/img-02-bf96bbd8b9.png" alt="M Perfumerie">
-        <h1 class="hero-title">Perfumes de <em>diseñador</em> · Niche · Árabes</h1>
+        <h1 class="hero-title">Perfumes de <em>diseñador</em> · <span class="ht-niche">niche</span> · <span class="ht-arabes">árabes</span></h1>
         <p class="hero-desc" id="heroDesc">Perfumería importada en Rosario. Elegís el producto en la página y coordinás por WhatsApp el pago y el envío.</p>
         <div class="cta-row">
           <a class="btn-gold" href="#todos-productos" data-open="section:todos-productos">Ver catálogo</a>
