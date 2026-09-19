@@ -2314,10 +2314,20 @@
     applyBrandFilter();
   });
 
+  function normBrand(s){
+    return (s || '').toString().toLowerCase()
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-z0-9]/g, '');
+  }
+  function brandMatches(productBrand, key){
+    const a = normBrand(productBrand), b = normBrand(key);
+    if(!a || !b) return false;
+    return a === b || a.includes(b) || b.includes(a);
+  }
   function showBrandResults(brandKey, aliases){
     const items = aliases
-      ? Object.values(allProducts).filter(p => aliases.includes((p.brand || '').toLowerCase()))
-      : Object.values(allProducts).filter(p => p.brand === brandKey);
+      ? Object.values(allProducts).filter(p => aliases.some(al => brandMatches(p.brand, al)))
+      : Object.values(allProducts).filter(p => brandMatches(p.brand, brandKey));
     items.sort((a, b) => (a.stock === false ? 1 : 0) - (b.stock === false ? 1 : 0));
     document.getElementById('brandListWrap').style.display = 'none';
     const resultsEl = document.getElementById('brandResults');
