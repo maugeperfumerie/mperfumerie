@@ -774,8 +774,10 @@
   }
   .prod-ml-chip{
     display:inline-block; width:fit-content; font-family:var(--sans); font-size:9.5px; color:rgba(10,9,8,0.68);
-    border:1px solid rgba(10,9,8,0.16); border-radius:999px; padding:3px 10px; margin-top:auto; margin-bottom:10px;
+    border:1px solid rgba(10,9,8,0.16); border-radius:999px; padding:3px 8px; margin:0;
   }
+  .prod-ml-list{display:flex;flex-wrap:wrap;gap:4px;margin-top:auto;margin-bottom:10px;}
+  .prod-ml-chip.sin-stock-variant{opacity:.4;text-decoration:line-through;}
   .price-row{ display:flex; align-items:baseline; justify-content:flex-start; gap:10px; margin-bottom:16px; }
   .price-old{ font-size:12.5px; color:#a3a3a3; text-decoration:line-through; font-weight:500; }
   .price-new{ font-size:17px; font-weight:800; color:var(--black); }
@@ -1226,6 +1228,12 @@
       <picture>
         <source media="(max-width:640px)" srcset="images/img-11-3eecbf4e1b.jpg">
         <img src="images/img-12-72d9a7979e.jpg" alt="Rabanne Fame">
+      </picture>
+    </button>
+    <button type="button" class="hero-ad-slide" data-slide="5" data-hero-brand="Shakira" aria-label="Publicidad Shakira, tocá para ver los perfumes Shakira">
+      <picture>
+        <source media="(max-width:640px)" srcset="images/banner-shakira-mobile.png">
+        <img src="images/banner-shakira-pc.png" alt="Perfumes Shakira">
       </picture>
     </button>
   </div>
@@ -1774,10 +1782,25 @@
     p.descuento = !!variante.descuento;
     p.descuentoPct = variante.descuentoPct || '';
     p.stock = variante.stock !== false;
+    p.img = variante.img || (Array.isArray(variante.images) && variante.images[0]) || p.img || '';
+    // Keep the product's legacy gallery as well as the first variant's gallery.
+    // Older product records may store the box/alternate shots only in p.images.
+    p.images = Array.from(new Set([
+      ...(Array.isArray(p.images) ? p.images : []),
+      ...(Array.isArray(variante.images) ? variante.images : []),
+      ...(variante.img ? [variante.img] : [])
+    ].filter(Boolean)));
+  }
+  function productVariants(p){
+    return Array.isArray(p.variantes) && p.variantes.length ? p.variantes : [{
+      ml:p.ml, price:p.price, priceOld:p.priceOld, priceNew:p.priceNew, off:p.off,
+      descuento:p.descuento, descuentoPct:p.descuentoPct, stock:p.stock, img:p.img, images:p.images
+    }];
   }
   function normalizeProducto(p){
     if(Array.isArray(p.variantes) && p.variantes.length){
       applyVariant(p, p.variantes[0]);
+      p.stock = p.variantes.some(v => v.stock !== false);
     }
     return p;
   }
@@ -1842,12 +1865,14 @@
   }
 
   function cardHtml(b){
-    const sinStock = b.stock === false;
+    const variants = productVariants(b);
+    const sinStock = variants.every(v => v.stock === false);
     const badge = sinStock ? `<span class="sale-badge" style="background:rgba(10,9,8,0.75); color:#fff;">Sin stock</span>` : (b.off ? `<span class="sale-badge">${b.off}</span>` : '');
     const hotBadge = b.topVentas ? hotBadgeHtml() : '';
     const priceHtml = b.priceOld
       ? `<div class="price-row"><span class="price-new">${b.priceNew}</span><span class="price-old">${b.priceOld}</span></div>`
       : `<div class="price-row"><span class="price-new">${b.price}</span></div>`;
+    const mlChips = variants.filter(v => v.ml).map(v => `<span class="prod-ml-chip${v.stock === false ? ' sin-stock-variant' : ''}">${v.ml}</span>`).join('');
     return `
       <div class="prod-card${sinStock ? ' sin-stock' : ''}" data-id="${b.id}">
         ${badge}
@@ -1857,7 +1882,7 @@
           <div class="prod-brand">${b.brand}</div>
           <h4>${nameHtml(b.name)}</h4>
           <div class="prod-type">${b.chip}</div>
-          <span class="prod-ml-chip">${b.ml}</span>
+          <div class="prod-ml-list">${mlChips}</div>
           ${priceHtml}
           <button class="add-cart-btn${sinStock ? ' disabled' : ''}" data-id="${b.id}"${sinStock ? ' data-sin-stock="1"' : ''}>
             <span class="btn-label">${sinStock ? 'Sin stock' : 'Agregar'}</span>
@@ -1956,6 +1981,7 @@
       if(addBtn){
         e.stopPropagation();
         if(addBtn.dataset.sinStock) return;
+        if(productVariants(allProducts[id]).length > 1){ openProductModal(id); return; }
         const added = addToCart(id);
         if(added === 0){
           const label = addBtn.querySelector('.btn-label');
@@ -2379,26 +2405,25 @@
     document.querySelectorAll('.pm-thumb').forEach((b, idx) => b.classList.toggle('active', idx === pmImageIndex));
   }
 
-  function openProductModal(id){
-    const p = allProducts[id];
-    if(!p) return;
-    const cardEl = document.querySelector(`[data-id="${id}"] .prod-img`);
-    const cardImgSrc = cardEl ? cardEl.src : (p.img || '');
-    pmImages = (p.images && p.images.length) ? p.images : [cardImgSrc];
+  function pmRenderVariantImages(p, v){
+    const primary = productVariants(p)[0];
+    const variantImages = Array.isArray(v.images) ? v.images : [];
+    const images = v === primary
+      ? Array.from(new Set([...(Array.isArray(p.images) ? p.images : []), ...variantImages, ...(v.img ? [v.img] : [])].filter(Boolean)))
+      : (variantImages.length ? Array.from(new Set([...variantImages, ...(v.img ? [v.img] : [])].filter(Boolean)))
+        : (v.img ? [v.img] : (Array.isArray(p.images) ? p.images : (p.img ? [p.img] : []))));
+    const cardImg = document.querySelector(`[data-id="${p.id}"] .prod-img`);
+    pmImages = images.length ? images : (cardImg ? [cardImg.src] : []);
     pmImageIndex = 0;
-    document.getElementById('pmImg').alt = p.name;
-    pmSetImage(pmImages[0], true);
-    document.getElementById('pmHotBadge').innerHTML = p.topVentas ? hotBadgeHtml(true) : '';
-
+    document.getElementById('pmImg').alt = `${p.name}${v.ml ? ` ${v.ml}` : ''}`;
     const imageWrap = document.querySelector('.pm-image');
     imageWrap.classList.toggle('has-multi', pmImages.length > 1);
-
     const thumbs = document.getElementById('pmThumbs');
     if(pmImages.length > 1){
       thumbs.style.display = 'flex';
       thumbs.innerHTML = pmImages.map((src, i) => `
         <button class="pm-thumb${i === 0 ? ' active' : ''}" data-index="${i}">
-          <img src="${src}" alt="${p.name} ${i + 1}">
+          <img src="${src}" alt="${p.name} ${v.ml || ''} ${i + 1}">
         </button>
       `).join('');
       thumbs.querySelectorAll('.pm-thumb').forEach(btn => {
@@ -2408,6 +2433,13 @@
       thumbs.style.display = 'none';
       thumbs.innerHTML = '';
     }
+    if(pmImages.length) pmShowImage(0);
+  }
+
+  function openProductModal(id){
+    const p = allProducts[id];
+    if(!p) return;
+    document.getElementById('pmHotBadge').innerHTML = p.topVentas ? hotBadgeHtml(true) : '';
 
     const badgeNew = document.getElementById('pmBadgeNew');
     if(p.chip === 'Lanzamiento' || p.chip === 'Pre-venta'){
@@ -2463,9 +2495,7 @@
 
   function pmRenderSizeChips(p){
     const row = document.getElementById('pmSizeRow');
-    const variantes = (Array.isArray(p.variantes) && p.variantes.length)
-      ? p.variantes
-      : [{ ml: p.ml, price: p.price, priceOld: p.priceOld, priceNew: p.priceNew, off: p.off, descuento: p.descuento, stock: p.stock }];
+    const variantes = productVariants(p);
     if(variantes.length <= 1){
       row.innerHTML = `<span class="pm-size-chip" id="pmMl">${variantes[0].ml || ''}</span>`;
       return;
@@ -2483,6 +2513,7 @@
     if(!p) return;
     const v = findVariant(p, ml) || {};
     pmCurrentVariantMl = v.ml || ml || '';
+    pmRenderVariantImages(p, v);
 
     document.querySelectorAll('#pmSizeRow .pm-size-chip').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.ml === pmCurrentVariantMl);
@@ -2701,7 +2732,7 @@
       const unit = parsePrice(v.priceNew || v.price);
       total += unit * c.qty;
       const imgEl = document.querySelector(`[data-id="${c.id}"] .prod-img`);
-      const imgSrc = imgEl ? imgEl.src : (p.img || '');
+      const imgSrc = v.img || (Array.isArray(v.images) && v.images[0]) || (imgEl ? imgEl.src : (p.img || ''));
       return `
         <div class="cart-item">
           <img src="${imgSrc}" alt="${p.name}">

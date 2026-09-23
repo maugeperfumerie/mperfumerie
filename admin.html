@@ -29,9 +29,15 @@
   .item .info b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .item .info span{font-size:12px;color:#999}
   .fotos-preview{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
-  .fotos-preview .f{position:relative}
-  .fotos-preview img{width:70px;height:70px;object-fit:cover;border-radius:6px;border:1px solid var(--border)}
-  .fotos-preview button{position:absolute;top:-6px;right:-6px;background:#7a2323;color:#fff;border-radius:50%;width:20px;height:20px;padding:0;font-size:12px;line-height:1;margin:0}
+  .fotos-preview .f{position:relative;width:116px;padding-bottom:29px}
+  .fotos-preview img{display:block;width:100%;height:92px;object-fit:cover;border-radius:6px;border:1px solid var(--border);background:#222}
+  .fotos-preview button{position:absolute;top:2px;right:2px;background:#7a2323;color:#fff;border-radius:50%;width:22px;height:22px;padding:0;font-size:13px;line-height:1;margin:0}
+  .fotos-preview img{cursor:zoom-in}
+  .fotos-preview .photo-remove{z-index:1}
+  .photo-viewer{position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;padding:20px;cursor:zoom-out}
+  .photo-viewer.open{display:flex}
+  .photo-viewer img{display:block;max-width:94vw;max-height:92vh;width:auto;height:auto;object-fit:contain;border-radius:8px;box-shadow:0 10px 45px rgba(0,0,0,.5);cursor:default}
+  .photo-viewer-close{position:absolute;top:14px;right:16px;background:#292929;color:#fff;font-size:24px;line-height:1;width:42px;height:42px;padding:0;margin:0;border-radius:50%}
   #status{font-size:13px;margin-top:10px}
   .hidden{display:none}
   .row{display:flex;gap:10px}
@@ -187,6 +193,11 @@
           <p class="ing-hint">Cargá el precio inicial, elegí el % de descuento, y el precio final y el cartel de "% OFF" se calculan solos.</p>
         </div>
 
+        <label style="margin-top:18px;">Otras presentaciones del mismo perfume</label>
+        <p class="ing-hint">La presentación de arriba es la primera. Agregá acá otros tamaños con su precio y sus propias fotos. Todos se mostrarán juntos en una sola publicación.</p>
+        <div id="variantesExtra"></div>
+        <button type="button" class="secondary" id="btnAgregarVariante">+ Agregar otra presentación</button>
+
         <label>Ingredientes (el primero es el principal — queda arriba con la barra más larga)</label>
         <p class="ing-hint">Nombre, % de la barra (0-100) y color. El orden en que los agregás es el orden en que se muestran.</p>
         <div id="ingList"></div>
@@ -218,6 +229,11 @@
       </form>
     </div>
   </div>
+</div>
+
+<div class="photo-viewer" id="photoViewer" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Vista ampliada de la foto">
+  <button type="button" class="photo-viewer-close" id="photoViewerClose" aria-label="Cerrar foto">×</button>
+  <img id="photoViewerImage" alt="Foto ampliada del producto">
 </div>
 
 <!-- Firebase SDK -->
@@ -277,6 +293,40 @@
   let seleccionados = new Set(); // ids tildados para borrado múltiple
   let itemsRenderizados = []; // [{id, el, texto}] para filtrar sin volver a pedir a Firestore
 
+  function abrirFotoGrande(src, alt){
+    const viewer=document.getElementById('photoViewer');
+    const image=document.getElementById('photoViewerImage');
+    image.alt=alt || 'Foto ampliada del producto';
+    image.src=src;
+    viewer.classList.add('open');
+    viewer.setAttribute('aria-hidden','false');
+    document.getElementById('photoViewerClose').focus();
+  }
+  function cerrarFotoGrande(){
+    const viewer=document.getElementById('photoViewer');
+    viewer.classList.remove('open');
+    viewer.setAttribute('aria-hidden','true');
+    document.getElementById('photoViewerImage').removeAttribute('src');
+  }
+  document.getElementById('photoViewerClose').onclick= cerrarFotoGrande;
+  document.getElementById('photoViewer').addEventListener('click',e=>{if(e.target.id==='photoViewer') cerrarFotoGrande();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('photoViewer').classList.contains('open')) cerrarFotoGrande();});
+
+  function crearAccionesFoto(item, origen, quitar){
+    const preview=document.createElement('img');
+    preview.alt='Foto del producto';
+    preview.src=origen instanceof File ? URL.createObjectURL(origen) : origen;
+    preview.title='Tocá para ver la foto completa';
+    preview.onclick=()=>abrirFotoGrande(preview.src,'Foto completa del producto');
+    item.appendChild(preview);
+    const remove=document.createElement('button');
+    remove.type='button'; remove.className='photo-remove'; remove.textContent='×'; remove.title='Quitar foto';
+    remove.setAttribute('aria-label','Quitar foto'); remove.onclick=quitar;
+    item.appendChild(remove);
+  }  function limpiarUrlsVistaPrevia(contenedor){
+    contenedor.querySelectorAll('img').forEach(img=>{if(img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);});
+  }
+
   function normalizar(str){
     return (str || '').toString().toLowerCase()
       .normalize('NFD').replace(/[̀-ͯ]/g, '');
@@ -299,7 +349,7 @@
           <input type="checkbox" data-id="${doc.id}">
         </label>
         <img src="${p.img || ''}">
-        <div class="info"><b>${p.topVentas ? '🔥 ' : ''}${p.name}</b><span>${p.brand} · ${p.categoria === 'ofertas' ? (p.priceNew||'') : (p.price||'')}</span></div>`;
+        <div class="info"><b>${p.topVentas ? '🔥 ' : ''}${p.name}</b><span>${p.brand} · ${p.priceOld ? (p.priceNew || '') : (p.price || '')}</span></div>`;
       div.onclick = () => editarProducto(doc.id);
       div.querySelector('input[type=checkbox]').onchange = (e) => {
         if(e.target.checked) seleccionados.add(doc.id);
@@ -414,13 +464,91 @@
   document.getElementById('f_moneda').addEventListener('change', () => {
     camposPrecio.forEach(id => formatearPrecio(document.getElementById(id)));
     calcularDescuento();
+    document.querySelectorAll('.variante-extra').forEach(card => {
+      card.querySelectorAll('[data-field="price"], [data-field="priceOld"]').forEach(formatearPrecio);
+      calcularDescuentoExtra(card);
+    });
   });
+
+  let variantesExtraActuales = [];
+  const porcentajesDescuento = ['10','15','20','25','30','35','40','50','60'];
+  function capturarVariantesExtra(){
+    document.querySelectorAll('.variante-extra').forEach((card, index) => {
+      const v = variantesExtraActuales[index];
+      card.querySelectorAll('[data-field]').forEach(el => {
+        v[el.dataset.field] = el.type === 'checkbox' ? el.checked : el.value;
+      });
+    });
+  }
+  function calcularDescuentoExtra(card){
+    const pct = Number(card.querySelector('[data-field="descuentoPct"]').value);
+    const oldInput = card.querySelector('[data-field="priceOld"]');
+    const digits = oldInput.value.replace(/[^\d]/g, '');
+    card.querySelector('[data-field="priceNew"]').value = pct && digits
+      ? simboloActual() + Math.round(Number(digits) * (1 - pct / 100)).toLocaleString('es-AR') : '';
+    card.querySelector('[data-field="off"]').value = pct ? pct + '% OFF' : '';
+  }
+  function renderVariantesExtra(){
+    const cont = document.getElementById('variantesExtra');
+    limpiarUrlsVistaPrevia(cont);
+    cont.innerHTML = variantesExtraActuales.map((v, i) => `
+      <div class="card variante-extra" data-index="${i}" style="margin:10px 0;padding:12px;">
+        <div class="topbar" style="margin:0 0 8px;"><b>Presentación ${i + 2}</b><button type="button" class="danger extra-remove" style="margin:0;padding:6px 10px;">Quitar</button></div>
+        <label>Mililitros</label><input data-field="ml" placeholder="150 ml" value="${(v.ml || '').replace(/"/g,'&quot;')}">
+        <label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" data-field="stock" style="width:auto;margin:0;" ${v.stock !== false ? 'checked' : ''}> Hay stock de esta presentación</label>
+        <label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" data-field="descuento" style="width:auto;margin:0;" ${v.descuento ? 'checked' : ''}> Tiene descuento</label>
+        <div class="extra-simple ${v.descuento ? 'hidden' : ''}"><label>Precio</label><input data-field="price" inputmode="numeric" placeholder="$100.000" value="${(v.price || '').replace(/"/g,'&quot;')}"></div>
+        <div class="extra-sale ${v.descuento ? '' : 'hidden'}">
+          <label>Precio inicial</label><input data-field="priceOld" inputmode="numeric" placeholder="$250.000" value="${(v.priceOld || '').replace(/"/g,'&quot;')}">
+          <label>Descuento</label><select data-field="descuentoPct"><option value="">Elegí un %</option>${porcentajesDescuento.map(pct => `<option value="${pct}" ${String(v.descuentoPct || '') === pct ? 'selected' : ''}>${pct}%</option>`).join('')}</select>
+          <div class="row"><div><label>Precio con descuento</label><input data-field="priceNew" readonly value="${(v.priceNew || '').replace(/"/g,'&quot;')}"></div><div><label>Texto del descuento</label><input data-field="off" readonly value="${(v.off || '').replace(/"/g,'&quot;')}"></div></div>
+        </div>
+        <label>Fotos de esta presentación</label><div class="fotos-preview extra-fotos-preview"></div><input type="file" class="extra-fotos" accept="image/*" multiple>
+      </div>`).join('');
+    cont.querySelectorAll('.variante-extra').forEach((card, i) => {
+      const v = variantesExtraActuales[i];
+      const preview = card.querySelector('.extra-fotos-preview');
+      const renderPreview = () => {
+        limpiarUrlsVistaPrevia(preview);
+        preview.innerHTML = '';
+        v.images.forEach((url, n) => {
+          const item = document.createElement('div'); item.className = 'f';
+          crearAccionesFoto(item,url,()=>{v.images.splice(n,1);renderPreview();});
+          preview.appendChild(item);
+        });
+        v.files.forEach((file, n) => {
+          const item = document.createElement('div'); item.className = 'f';
+          crearAccionesFoto(item,file,()=>{v.files.splice(n,1);renderPreview();});
+          preview.appendChild(item);
+        });
+      };
+      renderPreview();
+      card.querySelector('.extra-remove').onclick = () => { capturarVariantesExtra(); variantesExtraActuales.splice(i,1); renderVariantesExtra(); };
+      card.querySelector('[data-field="descuento"]').onchange = e => {
+        card.querySelector('.extra-simple').classList.toggle('hidden', e.target.checked);
+        card.querySelector('.extra-sale').classList.toggle('hidden', !e.target.checked);
+      };
+      card.querySelectorAll('[data-field="price"], [data-field="priceOld"]').forEach(input => input.addEventListener('input', () => formatearPrecio(input)));
+      card.querySelector('[data-field="priceOld"]').addEventListener('input', () => calcularDescuentoExtra(card));
+      card.querySelector('[data-field="descuentoPct"]').addEventListener('change', () => calcularDescuentoExtra(card));
+      card.querySelector('.extra-fotos').onchange = e => {
+        v.files.push(...Array.from(e.target.files)); e.target.value = ''; renderPreview();
+      };
+    });
+  }
+  document.getElementById('btnAgregarVariante').onclick = () => {
+    capturarVariantesExtra();
+    variantesExtraActuales.push({ml:'',price:'',priceOld:'',priceNew:'',descuentoPct:'',off:'',descuento:false,stock:true,images:[],files:[]});
+    renderVariantesExtra();
+  };
 
   function limpiarForm(){
     idActual = null;
     fotosNuevas = [];
     fotosExistentes = [];
     ingredientesActuales = [];
+    variantesExtraActuales = [];
+    renderVariantesExtra();
     document.getElementById('form').reset();
     document.getElementById('formTitulo').textContent = 'Nuevo producto';
     document.getElementById('btnBorrar').classList.add('hidden');
@@ -432,20 +560,18 @@
 
   function renderFotosPreview(){
     const cont = document.getElementById('fotosPreview');
+    limpiarUrlsVistaPrevia(cont);
     cont.innerHTML = '';
     fotosExistentes.forEach((url, i) => {
       const div = document.createElement('div');
       div.className = 'f';
-      div.innerHTML = `<img src="${url}"><button type="button" data-i="${i}">×</button>`;
-      div.querySelector('button').onclick = () => { fotosExistentes.splice(i,1); renderFotosPreview(); };
+      crearAccionesFoto(div,url,()=>{fotosExistentes.splice(i,1);renderFotosPreview();});
       cont.appendChild(div);
     });
     fotosNuevas.forEach((file, i) => {
-      const url = URL.createObjectURL(file);
       const div = document.createElement('div');
       div.className = 'f';
-      div.innerHTML = `<img src="${url}"><button type="button" data-i="${i}">×</button>`;
-      div.querySelector('button').onclick = () => { fotosNuevas.splice(i,1); renderFotosPreview(); };
+      crearAccionesFoto(div,file,()=>{fotosNuevas.splice(i,1);renderFotosPreview();});
       cont.appendChild(div);
     });
   }
@@ -500,31 +626,41 @@
 
   function editarProducto(id){
     const p = productos[id];
+    const variantes = Array.isArray(p.variantes) && p.variantes.length ? p.variantes : [];
+    const principal = variantes[0] || p;
     idActual = id;
     fotosNuevas = [];
-    fotosExistentes = p.images && p.images.length ? [...p.images] : (p.img ? [p.img] : []);
+    // Conservar la galería anterior del producto aunque sus variantes ya tengan fotos propias.
+    fotosExistentes = Array.from(new Set([
+      ...(Array.isArray(p.images) ? p.images : []),
+      ...(Array.isArray(principal.images) ? principal.images : []),
+      ...(principal.img ? [principal.img] : []),
+      ...(p.img ? [p.img] : [])
+    ].filter(Boolean)));
+    variantesExtraActuales = variantes.slice(1).map(v => ({...v, images:Array.isArray(v.images) ? [...v.images] : (v.img ? [v.img] : []), files:[]}));
     ingredientesActuales = Array.isArray(p.ingredientes) ? JSON.parse(JSON.stringify(p.ingredientes)) : [];
     document.getElementById('formTitulo').textContent = 'Editando: ' + p.name;
     document.getElementById('f_name').value = p.name || '';
     document.getElementById('f_brand').value = p.brand || '';
-    document.getElementById('f_ml').value = p.ml || '';
+    document.getElementById('f_ml').value = principal.ml || p.ml || '';
     document.getElementById('f_chip').value = p.chip || 'Diseñador';
     document.getElementById('f_categoria').value = p.categoria || 'nuevos';
     document.getElementById('f_genero').value = p.genero || 'Unisex';
-    document.getElementById('f_descuento').checked = p.descuento !== undefined ? !!p.descuento : !!(p.priceOld || p.categoria === 'ofertas');
-    document.getElementById('f_stock').checked = p.stock !== false;
+    document.getElementById('f_descuento').checked = principal.descuento !== undefined ? !!principal.descuento : (p.descuento !== undefined ? !!p.descuento : !!(principal.priceOld || p.priceOld || p.categoria === 'ofertas'));
+    document.getElementById('f_stock').checked = principal.stock !== undefined ? principal.stock !== false : p.stock !== false;
     document.getElementById('f_topventas').checked = !!p.topVentas;
     document.getElementById('f_notasSalida').value = p.notasSalida || '';
     document.getElementById('f_notasCorazon').value = p.notasCorazon || '';
     document.getElementById('f_notasFondo').value = p.notasFondo || '';
     document.getElementById('f_descripcion').value = p.descripcion || '';
     document.getElementById('f_moneda').value = p.moneda || 'ARS';
-    document.getElementById('f_price').value = p.price || '';
-    document.getElementById('f_priceOld').value = p.priceOld || '';
-    document.getElementById('f_descuentoPct').value = p.descuentoPct || '';
-    document.getElementById('f_priceNew').value = p.priceNew || '';
-    document.getElementById('f_off').value = p.off || '';
+    document.getElementById('f_price').value = principal.price || p.price || '';
+    document.getElementById('f_priceOld').value = principal.priceOld || p.priceOld || '';
+    document.getElementById('f_descuentoPct').value = principal.descuentoPct || p.descuentoPct || '';
+    document.getElementById('f_priceNew').value = principal.priceNew || p.priceNew || '';
+    document.getElementById('f_off').value = principal.off || p.off || '';
     toggleCategoriaCampos();
+    renderVariantesExtra();
     renderFotosPreview();
     renderIngredientes();
     document.getElementById('btnBorrar').classList.remove('hidden');
@@ -548,6 +684,10 @@
     try{
       const name = document.getElementById('f_name').value.trim();
       const id = idActual || slugify(name);
+      capturarVariantesExtra();
+      for(let i = 0; i < variantesExtraActuales.length; i++){
+        if(!String(variantesExtraActuales[i].ml || '').trim()) throw new Error(`Completá los mililitros de la presentación ${i + 2}.`);
+      }
 
       // Subir fotos nuevas
       const urlsSubidas = [];
@@ -559,6 +699,19 @@
         await ref.put(file);
         const url = await ref.getDownloadURL();
         urlsSubidas.push(url);
+      }
+
+      for (let i = 0; i < variantesExtraActuales.length; i++){
+        const v = variantesExtraActuales[i];
+        for(let j = 0; j < v.files.length; j++){
+          status.textContent = `Subiendo fotos de la presentación ${i + 2}...`;
+          const file = v.files[j];
+          const path = `productos/${id}/presentaciones/${slugify(v.ml)}/${Date.now()}_${j}_${file.name}`;
+          const ref = storage.ref().child(path);
+          await ref.put(file);
+          v.images.push(await ref.getDownloadURL());
+        }
+        v.files = [];
       }
 
       const imagesFinal = [...fotosExistentes, ...urlsSubidas];
@@ -591,13 +744,51 @@
         orden: (productos[id] && productos[id].orden) || Date.now(),
       };
       if (document.getElementById('f_descuento').checked){
+        // Limpiar el precio simple anterior para que el panel y la tienda usen
+        // siempre el mismo modo de precio después de editar un producto.
+        doc.price = firebase.firestore.FieldValue.delete();
         doc.priceOld = document.getElementById('f_priceOld').value.trim();
         doc.descuentoPct = document.getElementById('f_descuentoPct').value;
         doc.priceNew = document.getElementById('f_priceNew').value.trim();
         doc.off = document.getElementById('f_off').value.trim();
       } else {
         doc.price = document.getElementById('f_price').value.trim();
+        // set(..., {merge:true}) conserva los campos omitidos. Borrarlos evita
+        // que la tienda siga mostrando un descuento viejo en vez del precio nuevo.
+        doc.priceOld = firebase.firestore.FieldValue.delete();
+        doc.descuentoPct = firebase.firestore.FieldValue.delete();
+        doc.priceNew = firebase.firestore.FieldValue.delete();
+        doc.off = firebase.firestore.FieldValue.delete();
       }
+
+      const principal = {
+        ml: doc.ml,
+        price: doc.descuento ? '' : doc.price,
+        priceOld: doc.descuento ? doc.priceOld : '',
+        priceNew: doc.descuento ? doc.priceNew : '',
+        descuentoPct: doc.descuento ? doc.descuentoPct : '',
+        off: doc.descuento ? doc.off : '',
+        descuento: doc.descuento,
+        stock: doc.stock,
+        img: imagesFinal[0] || '',
+        images: imagesFinal
+      };
+      const adicionales = variantesExtraActuales.map(v => {
+        const conDescuento = !!v.descuento;
+        return {
+          ml: String(v.ml || '').trim(),
+          price: conDescuento ? '' : String(v.price || '').trim(),
+          priceOld: conDescuento ? String(v.priceOld || '').trim() : '',
+          priceNew: conDescuento ? String(v.priceNew || '').trim() : '',
+          descuentoPct: conDescuento ? String(v.descuentoPct || '') : '',
+          off: conDescuento ? String(v.off || '') : '',
+          descuento: conDescuento,
+          stock: v.stock !== false,
+          img: v.images[0] || '',
+          images: v.images
+        };
+      });
+      doc.variantes = [principal, ...adicionales];
 
       await db.collection('productos').doc(id).set(doc, {merge:true});
       status.textContent = '✅ Guardado.';
