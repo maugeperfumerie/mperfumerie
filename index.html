@@ -753,8 +753,8 @@
     65%{ opacity:1; transform:scale(1) translateY(0); }
     90%{ opacity:0; transform:scale(.65) translateY(2px); }
   }
-  .prod-img-wrap{ padding:0; background:#ffffff; position:relative; overflow:hidden; }
-  .prod-img{ width:100%; height:170px; object-fit:contain; display:block; background:#ffffff; }
+  .prod-img-wrap{ padding:0; height:170px; background:#ffffff; position:relative; overflow:hidden; }
+  .prod-img{ position:absolute; left:0; right:0; bottom:0; width:100%; height:100%; object-fit:contain; object-position:center bottom; display:block; background:#ffffff; }
   .prod-img-overlay{ position:absolute; inset:0; opacity:0; transition:opacity .7s ease; }
   .prod-body{ padding:6px 20px 22px; display:flex; flex-direction:column; flex:1; }
   .prod-brand{
@@ -776,7 +776,7 @@
     display:inline-block; width:fit-content; font-family:var(--sans); font-size:9.5px; color:rgba(10,9,8,0.68);
     border:1px solid rgba(10,9,8,0.16); border-radius:999px; padding:3px 8px; margin:0;
   }
-  .prod-ml-list{display:flex;flex-wrap:wrap;gap:4px;margin-top:auto;margin-bottom:10px;}
+  .prod-ml-list{display:flex;flex:0 0 48px;height:48px;align-content:flex-start;flex-wrap:wrap;gap:4px;margin-top:auto;margin-bottom:10px;}
   .prod-ml-chip.sin-stock-variant{opacity:.4;text-decoration:line-through;}
   .price-row{ display:flex; align-items:baseline; justify-content:flex-start; gap:10px; margin-bottom:16px; }
   .price-old{ font-size:12.5px; color:#a3a3a3; text-decoration:line-through; font-weight:500; }
@@ -1011,9 +1011,9 @@
     .wrap{ padding:0 20px; }
     .prod-grid{ grid-template-columns:1fr 1fr; gap:16px; }
     .prod-card{ border-radius:13px; }
-    .prod-img-wrap{ padding:0; }
+    .prod-img-wrap{ padding:0; height:120px; }
     .prod-body{ padding:4px 14px 16px; }
-    .prod-img{ height:120px; }
+    .prod-img{ height:100%; }
     .prod-card h4{ font-size:12px; }
     .price-new{ font-size:15px; }
     .add-cart-btn{ padding:11px 10px; font-size:9.5px; }
@@ -1249,10 +1249,10 @@
 <section class="quick-cats home-flow">
   <div class="wrap">
     <div class="quick-grid">
-      <a href="#nuevos-ingresos" class="quick-card" data-open="categoria:nuevos"><span>New</span></a>
+      <a href="#nuevos-ingresos" class="quick-card" data-open="categoria:nuevos"><span>Nuevos</span></a>
       <a href="#ofertas" class="quick-card" data-open="categoria:ofertas"><span>Ofertas</span></a>
       <a href="#todos-productos" class="quick-card" data-open="section:todos-productos"><span>Perfumes</span></a>
-      <a href="#perfumeria" class="quick-card" data-open="section:perfumeria"><span>Perfumería</span></a>
+      <a href="#marcas" class="quick-card" data-open="section:marcas"><span>Marcas</span></a>
     </div>
   </div>
 </section>
@@ -2077,7 +2077,14 @@
     el.classList.add('page-enter');
   }
 
-  function closeAllStandalone(){
+  function saveViewInHistory(view){
+    const state = {...(history.state || {}), mperfView:view};
+    history.pushState(state, '', location.href);
+  }
+  history.replaceState({...history.state, mperfView:{type:'home'}}, '', location.href);
+
+  function closeAllStandalone(addHistory=true){
+    if(addHistory) saveViewInHistory({type:'home'});
     categoriaFullSection.classList.remove('open');
     standaloneSectionIds.forEach(sid => {
       const el = document.getElementById(sid);
@@ -2088,7 +2095,8 @@
     playPageEnter(document.getElementById('top'));
   }
 
-  function openStandaloneSection(id){
+  function openStandaloneSection(id, addHistory=true){
+    if(addHistory) saveViewInHistory({type:'section',id});
     showHomeFlow(false);
     categoriaFullSection.classList.remove('open');
     standaloneSectionIds.forEach(sid => {
@@ -2099,7 +2107,8 @@
     playPageEnter(document.getElementById(id));
   }
 
-  function openCategoriaFull(cat){
+  function openCategoriaFull(cat, addHistory=true){
+    if(addHistory) saveViewInHistory({type:'category',cat});
     let items = [], title = '';
     if(cat === 'ofertas'){ items = ofertas; title = 'Ofertas'; }
     else if(cat === 'nuevos'){ items = nuevos; title = 'Nuevos ingresos'; }
@@ -2132,6 +2141,27 @@
       else if(kind === 'home') closeAllStandalone();
       else openStandaloneSection(val);
     });
+  });
+
+  window.addEventListener('popstate', e => {
+    const view = e.state && e.state.mperfView;
+    closeProductModal();
+    if(!view || view.type === 'home') { closeAllStandalone(false); return; }
+    if(view.type === 'section') { openStandaloneSection(view.id, false); return; }
+    if(view.type === 'category') { openCategoriaFull(view.cat, false); return; }
+    if(view.type === 'brand-list') {
+      openStandaloneSection('marcas', false);
+      document.getElementById('brandResults').style.display = 'none';
+      document.getElementById('brandListWrap').style.display = 'block';
+      return;
+    }
+    if(view.type === 'brand-results') {
+      openStandaloneSection('marcas', false);
+      showBrandResults(view.brand, null, false);
+      return;
+    }
+    if(view.type === 'product') { openProductModal(view.id, false); return; }
+    closeProductModal();
   });
 
   // ---------- TODOS LOS PRODUCTOS: orden y filtro ----------
@@ -2350,7 +2380,8 @@
     if(!a || !b) return false;
     return a === b || a.includes(b) || b.includes(a);
   }
-  function showBrandResults(brandKey, aliases){
+  function showBrandResults(brandKey, aliases, addHistory=true){
+    if(addHistory) saveViewInHistory({type:'brand-results',brand:brandKey});
     const items = aliases
       ? Object.values(allProducts).filter(p => aliases.some(al => brandMatches(p.brand, al)))
       : Object.values(allProducts).filter(p => brandMatches(p.brand, brandKey));
@@ -2368,6 +2399,7 @@
     document.getElementById('marcas').scrollIntoView({behavior:'smooth', block:'start'});
   }
   document.getElementById('brandResultsClose').addEventListener('click', () => {
+    saveViewInHistory({type:'brand-list'});
     document.getElementById('brandResults').style.display = 'none';
     document.getElementById('brandListWrap').style.display = 'block';
   });
@@ -2436,9 +2468,10 @@
     if(pmImages.length) pmShowImage(0);
   }
 
-  function openProductModal(id){
+  function openProductModal(id, addHistory=true){
     const p = allProducts[id];
     if(!p) return;
+    if(addHistory) saveViewInHistory({type:'product',id});
     document.getElementById('pmHotBadge').innerHTML = p.topVentas ? hotBadgeHtml(true) : '';
 
     const badgeNew = document.getElementById('pmBadgeNew');
@@ -2586,15 +2619,22 @@
     document.getElementById('productModal').classList.remove('open');
     document.body.style.overflow = '';
   }
-  document.getElementById('pmClose').addEventListener('click', closeProductModal);
+  function closeProductModalWithHistory(){
+    if(history.state && history.state.mperfView && history.state.mperfView.type === 'product') history.back();
+    else closeProductModal();
+  }
+  document.getElementById('pmClose').addEventListener('click', closeProductModalWithHistory);
   document.getElementById('pmBrand').addEventListener('click', () => {
     const brand = document.getElementById('pmBrand').dataset.brand;
     if(!brand) return;
     closeProductModal();
-    openStandaloneSection('marcas');
+    if(history.state && history.state.mperfView && history.state.mperfView.type === 'product'){
+      history.replaceState({...history.state,mperfView:{type:'section',id:'marcas'}},'',location.href);
+    }
+    openStandaloneSection('marcas', false);
     showBrandResults(brand);
   });
-  document.getElementById('pmOverlay').addEventListener('click', closeProductModal);
+  document.getElementById('pmOverlay').addEventListener('click', closeProductModalWithHistory);
   document.getElementById('pmArrowPrev').addEventListener('click', () => pmShowImage(pmImageIndex - 1));
   document.getElementById('pmArrowNext').addEventListener('click', () => pmShowImage(pmImageIndex + 1));
 

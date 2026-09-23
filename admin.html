@@ -30,7 +30,12 @@
   .item .info span{font-size:12px;color:#999}
   .fotos-preview{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
   .fotos-preview .f{position:relative;width:116px;padding-bottom:29px}
-  .fotos-preview img{display:block;width:100%;height:92px;object-fit:cover;border-radius:6px;border:1px solid var(--border);background:#222}
+  .fotos-preview .f{cursor:grab;touch-action:pan-y}
+  .fotos-preview .f.dragging{opacity:.45}
+  .fotos-preview .photo-order{display:flex;gap:4px;justify-content:center;margin-top:5px}
+  .fotos-preview .photo-order button{position:static;width:28px;height:23px;border-radius:5px;background:#343434;color:#fff;font-size:13px}
+  .fotos-preview .photo-order button:disabled{opacity:.35;cursor:default}
+  .fotos-preview img{display:block;width:100%;height:92px;object-fit:contain;border-radius:6px;border:1px solid var(--border);background:#222}
   .fotos-preview button{position:absolute;top:2px;right:2px;background:#7a2323;color:#fff;border-radius:50%;width:22px;height:22px;padding:0;font-size:13px;line-height:1;margin:0}
   .fotos-preview img{cursor:zoom-in}
   .fotos-preview .photo-remove{z-index:1}
@@ -289,6 +294,7 @@
   let idActual = null;
   let fotosNuevas = []; // File objects pendientes de subir
   let fotosExistentes = []; // URLs ya subidas (se mantienen si no se borran)
+  let fotosOrdenadas = []; // Fotos mezcladas en el orden que verá la tienda
   let ingredientesActuales = []; // [{nombre, cantidad, color}]
   let seleccionados = new Set(); // ids tildados para borrado múltiple
   let itemsRenderizados = []; // [{id, el, texto}] para filtrar sin volver a pedir a Firestore
@@ -546,6 +552,7 @@
     idActual = null;
     fotosNuevas = [];
     fotosExistentes = [];
+    fotosOrdenadas = [];
     ingredientesActuales = [];
     variantesExtraActuales = [];
     renderVariantesExtra();
@@ -562,22 +569,44 @@
     const cont = document.getElementById('fotosPreview');
     limpiarUrlsVistaPrevia(cont);
     cont.innerHTML = '';
-    fotosExistentes.forEach((url, i) => {
+    function moverFoto(origen, destino){
+      if(destino < 0 || destino >= fotosOrdenadas.length || destino === origen) return;
+      const [foto] = fotosOrdenadas.splice(origen, 1);
+      fotosOrdenadas.splice(destino, 0, foto);
+      renderFotosPreview();
+    }
+    fotosOrdenadas.forEach((foto, i) => {
       const div = document.createElement('div');
       div.className = 'f';
-      crearAccionesFoto(div,url,()=>{fotosExistentes.splice(i,1);renderFotosPreview();});
-      cont.appendChild(div);
-    });
-    fotosNuevas.forEach((file, i) => {
-      const div = document.createElement('div');
-      div.className = 'f';
-      crearAccionesFoto(div,file,()=>{fotosNuevas.splice(i,1);renderFotosPreview();});
+      div.draggable = true;
+      crearAccionesFoto(div,foto.value,()=>{
+        fotosOrdenadas.splice(i,1);
+        if(foto.tipo === 'existente') fotosExistentes = fotosExistentes.filter(url => url !== foto.value);
+        else fotosNuevas = fotosNuevas.filter(file => file !== foto.value);
+        renderFotosPreview();
+      });
+      const acciones = document.createElement('div');
+      acciones.className = 'photo-order';
+      [['↑',i-1,'Subir foto'],['↓',i+1,'Bajar foto']].forEach(([label,destino,titulo]) => {
+        const button = document.createElement('button');
+        button.type = 'button'; button.textContent = label; button.title = titulo;
+        button.setAttribute('aria-label',titulo); button.disabled = destino < 0 || destino >= fotosOrdenadas.length;
+        button.onclick = () => moverFoto(i,destino);
+        acciones.appendChild(button);
+      });
+      div.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', String(i)); e.dataTransfer.effectAllowed = 'move'; div.classList.add('dragging'); });
+      div.addEventListener('dragend', () => div.classList.remove('dragging'));
+      div.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
+      div.addEventListener('drop', e => { e.preventDefault(); const from = Number(e.dataTransfer.getData('text/plain')); if(Number.isInteger(from)) moverFoto(from,i); });
+      div.appendChild(acciones);
       cont.appendChild(div);
     });
   }
 
   document.getElementById('f_fotos').onchange = (e) => {
-    fotosNuevas = fotosNuevas.concat(Array.from(e.target.files));
+    const nuevas = Array.from(e.target.files);
+    fotosNuevas = fotosNuevas.concat(nuevas);
+    fotosOrdenadas = fotosOrdenadas.concat(nuevas.map(value => ({tipo:'nueva',value})));
     e.target.value = '';
     renderFotosPreview();
   };
@@ -637,6 +666,7 @@
       ...(principal.img ? [principal.img] : []),
       ...(p.img ? [p.img] : [])
     ].filter(Boolean)));
+    fotosOrdenadas = fotosExistentes.map(value => ({tipo:'existente',value}));
     variantesExtraActuales = variantes.slice(1).map(v => ({...v, images:Array.isArray(v.images) ? [...v.images] : (v.img ? [v.img] : []), files:[]}));
     ingredientesActuales = Array.isArray(p.ingredientes) ? JSON.parse(JSON.stringify(p.ingredientes)) : [];
     document.getElementById('formTitulo').textContent = 'Editando: ' + p.name;
@@ -690,7 +720,7 @@
       }
 
       // Subir fotos nuevas
-      const urlsSubidas = [];
+      const urlsPorArchivo = new Map();
       for (let i = 0; i < fotosNuevas.length; i++){
         status.textContent = `Subiendo foto ${i+1} de ${fotosNuevas.length}...`;
         const file = fotosNuevas[i];
@@ -698,7 +728,7 @@
         const ref = storage.ref().child(path);
         await ref.put(file);
         const url = await ref.getDownloadURL();
-        urlsSubidas.push(url);
+        urlsPorArchivo.set(file,url);
       }
 
       for (let i = 0; i < variantesExtraActuales.length; i++){
@@ -714,7 +744,7 @@
         v.files = [];
       }
 
-      const imagesFinal = [...fotosExistentes, ...urlsSubidas];
+      const imagesFinal = fotosOrdenadas.map(foto => foto.tipo === 'existente' ? foto.value : urlsPorArchivo.get(foto.value)).filter(Boolean);
       const cat = document.getElementById('f_categoria').value;
 
       const doc = {
