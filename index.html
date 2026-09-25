@@ -559,25 +559,25 @@
 
   /* ---------- GÉNERO (Femeninos / Masculinos / Unisex) ---------- */
   .gender-cats{ background:var(--white-dim); padding:28px 0 0; }
-  .gender-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; max-width:760px; margin:0 auto; }
+  .gender-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; max-width:600px; margin:0 auto; }
   .gender-card{
-    display:flex; align-items:center; justify-content:center; gap:10px;
+    display:flex; align-items:center; justify-content:center; gap:8px;
     background:transparent; border:1px solid rgba(10,9,8,0.1); border-radius:10px;
-    padding:16px 14px; text-decoration:none; color:rgba(10,9,8,0.45);
+    padding:9px 12px; text-decoration:none; color:rgba(10,9,8,0.45);
     transition: border-color .25s ease, background .25s ease, transform .25s ease, color .25s ease;
   }
   .gender-card:hover{ border-color:rgba(10,9,8,0.25); color:rgba(10,9,8,0.7); transform:translateY(-2px); }
   .gender-card:hover svg{ color:rgba(10,9,8,0.55); }
   .gender-card:active{ transform:scale(0.98); }
-  .gender-card svg{ width:22px; height:22px; flex:none; color:rgba(10,9,8,0.35); transition:color .25s ease; }
-  .gender-card .gc-label{ font-family:var(--serif); font-weight:400; font-size:17px; letter-spacing:-0.005em; }
+  .gender-card svg{ width:17px; height:17px; flex:none; color:rgba(10,9,8,0.35); transition:color .25s ease; }
+  .gender-card .gc-label{ font-family:var(--serif); font-weight:400; font-size:15px; letter-spacing:-0.005em; }
   .gender-cats + .products{ padding-top:64px; }
   @media (max-width:640px){
     .gender-cats{ padding-top:18px; }
     .gender-grid{ max-width:none; gap:8px; }
-    .gender-card{ flex-direction:column; gap:6px; padding:14px 4px; border-radius:8px; }
-    .gender-card svg{ width:22px; height:22px; }
-    .gender-card .gc-label{ font-size:14px; }
+    .gender-card{ gap:5px; padding:8px 4px; border-radius:8px; }
+    .gender-card svg{ width:14px; height:14px; }
+    .gender-card .gc-label{ font-size:12.5px; }
     .gender-cats + .products{ padding-top:48px; }
   }
 
