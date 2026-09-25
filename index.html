@@ -557,6 +557,36 @@
   }
   .quick-card.pop{ animation: bubblePop .38s ease; }
 
+  /* ---------- GÉNERO (Femeninos / Masculinos / Unisex) ---------- */
+  .gender-cats{ background:var(--white-dim); padding:28px 0 0; }
+  .gender-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; max-width:760px; margin:0 auto; }
+  .gender-card{
+    display:flex; align-items:center; justify-content:center; gap:10px;
+    background:transparent; border:1px solid rgba(10,9,8,0.1); border-radius:10px;
+    padding:16px 14px; text-decoration:none; color:rgba(10,9,8,0.45);
+    transition: border-color .25s ease, background .25s ease, transform .25s ease, color .25s ease;
+  }
+  .gender-card:hover{ border-color:rgba(10,9,8,0.25); color:rgba(10,9,8,0.7); transform:translateY(-2px); }
+  .gender-card:hover svg{ color:rgba(10,9,8,0.55); }
+  .gender-card:active{ transform:scale(0.98); }
+  .gender-card svg{ width:22px; height:22px; flex:none; color:rgba(10,9,8,0.35); transition:color .25s ease; }
+  .gender-card .gc-label{ font-family:var(--serif); font-weight:400; font-size:17px; letter-spacing:-0.005em; }
+  .gender-cats + .products{ padding-top:64px; }
+  @media (max-width:640px){
+    .gender-cats{ padding-top:18px; }
+    .gender-grid{ max-width:none; gap:8px; }
+    .gender-card{ flex-direction:column; gap:6px; padding:14px 4px; border-radius:8px; }
+    .gender-card svg{ width:22px; height:22px; }
+    .gender-card .gc-label{ font-size:14px; }
+    .gender-cats + .products{ padding-top:48px; }
+  }
+
+  /* ---------- CONTACTO: explicación de tipos de perfume ---------- */
+  .perf-types{ margin-top:26px; max-width:460px; display:flex; flex-direction:column; gap:14px; }
+  .perf-type{ padding-left:14px; border-left:1px solid rgba(201,151,78,0.45); }
+  .perf-type strong{ display:block; font-family:var(--sans); font-size:10.5px; font-weight:700; letter-spacing:0.18em; text-transform:uppercase; color:var(--gold-1); margin-bottom:4px; }
+  .perf-type p{ font-size:13.5px; line-height:1.6; color:rgba(250,248,245,0.55); font-weight:300; }
+
   @keyframes rise{ from{ opacity:0; transform:translateY(22px);} to{ opacity:1; transform:translateY(0);} }
   @keyframes pulse{ 0%,100%{opacity:.3;} 50%{opacity:1;} }
 
@@ -1195,7 +1225,7 @@
         <p class="hero-script">Perfumes de</p>
         <h1 class="hero-title-stack">
           <span class="hts-line">Diseñador</span>
-          <span class="hts-line">Niche</span>
+          <span class="hts-line">Nicho</span>
           <span class="hts-line">Árabes</span>
         </h1>
         <div class="hero-divider"></div>
@@ -1206,36 +1236,7 @@
         </div>
       </div>
     </div>
-    <button type="button" class="hero-ad-slide" data-slide="1" data-hero-brand="Lattafa" aria-label="Publicidad Lattafa Khamrah Waha, tocá para ver los perfumes Lattafa">
-      <picture>
-        <source media="(max-width:640px)" srcset="images/img-05-112caedeaa.jpg">
-        <img src="images/img-06-5a03b4c755.jpg" alt="Lattafa Khamrah Waha">
-      </picture>
-    </button>
-    <button type="button" class="hero-ad-slide" data-slide="2" data-hero-brand="Emporio Armani" aria-label="Publicidad Emporio Armani Stronger With You Intensely, tocá para ver los perfumes Emporio Armani">
-      <picture>
-        <source media="(max-width:640px)" srcset="images/img-07-47ae2f24c9.jpg">
-        <img src="images/img-08-795e806166.jpg" alt="Emporio Armani Stronger With You Intensely">
-      </picture>
-    </button>
-    <button type="button" class="hero-ad-slide" data-slide="3" data-hero-brand="Jean Paul Gaultier" aria-label="Publicidad Jean Paul Gaultier Scandal, tocá para ver los perfumes Jean Paul Gaultier">
-      <picture>
-        <source media="(max-width:640px)" srcset="images/img-09-0d6884e4bd.jpg">
-        <img src="images/img-10-b0ff949b1d.jpg" alt="Jean Paul Gaultier Scandal">
-      </picture>
-    </button>
-    <button type="button" class="hero-ad-slide" data-slide="4" data-hero-brand="Rabanne" aria-label="Publicidad Rabanne Fame, tocá para ver los perfumes Rabanne">
-      <picture>
-        <source media="(max-width:640px)" srcset="images/img-11-3eecbf4e1b.jpg">
-        <img src="images/img-12-72d9a7979e.jpg" alt="Rabanne Fame">
-      </picture>
-    </button>
-    <button type="button" class="hero-ad-slide" data-slide="5" data-hero-brand="Shakira" aria-label="Publicidad Shakira, tocá para ver los perfumes Shakira">
-      <picture>
-        <source media="(max-width:640px)" srcset="images/banner-shakira-mobile.png">
-        <img src="images/banner-shakira-pc.png" alt="Perfumes Shakira">
-      </picture>
-    </button>
+    <!-- las publicidades (flyers) se cargan desde el admin: Firestore productos/_flyers -->
   </div>
   <button type="button" class="hero-arrow hero-arrow-prev hidden" id="heroPrev" aria-label="Publicidad anterior">
     <svg viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="#faf8f5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -1253,6 +1254,16 @@
       <a href="#ofertas" class="quick-card" data-open="categoria:ofertas"><span>Ofertas</span></a>
       <a href="#todos-productos" class="quick-card" data-open="section:todos-productos"><span>Perfumes</span></a>
       <a href="#marcas" class="quick-card" data-open="section:marcas"><span>Marcas</span></a>
+    </div>
+  </div>
+</section>
+
+<section class="gender-cats home-flow" aria-label="Perfumes por género">
+  <div class="wrap">
+    <div class="gender-grid">
+      <a href="#todos-productos" class="gender-card" data-open="genero:Mujer"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M12 2.6c-3.3 0-5.4 2.7-5.2 6.8.1 3.1-.6 5.5-2.1 7.4 1.6.9 3.5 1.2 5.3.9h4c1.8.3 3.7 0 5.3-.9-1.5-1.9-2.2-4.3-2.1-7.4.2-4.1-1.9-6.8-5.2-6.8zM12.2 6.3c-.9 1.4-2.5 2.5-4.1 2.8l-.1 1.1c0 2.6 1.8 4.7 4 4.7s4-2.1 4-4.7c0-1.5-.5-2.8-1.4-3.6-.8.2-1.7 0-2.4-.3z"/><path d="M4.6 22c.5-2.6 2.4-4.1 4.9-4.6.9.6 1.9.9 2.5.9s1.6-.3 2.5-.9c2.5.5 4.4 2 4.9 4.6z"/></svg><span class="gc-label">Femeninos</span></a>
+      <a href="#todos-productos" class="gender-card" data-open="genero:Hombre"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M12 2.6c-3.1 0-5 2.1-4.9 5.5l.1 2.6c.1 2.9 2.1 5.1 4.8 5.1s4.7-2.2 4.8-5.1l.1-2.6c.1-3.4-1.8-5.5-4.9-5.5zM8.15 10.2c0-1.6.4-2.6 1.1-3.1 1.7.4 3.8-.1 5.3-1.4.9.8 1.3 2.1 1.3 3.6v1c0 2.4-1.7 4.3-3.85 4.3S8.15 12.7 8.15 10.2z"/><path d="M4.6 22c.4-2.8 2.4-4.4 5-4.9l2.4 1.5 2.4-1.5c2.6.5 4.6 2.1 5 4.9z"/></svg><span class="gc-label">Masculinos</span></a>
+      <a href="#todos-productos" class="gender-card" data-open="genero:Unisex"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="11.5" r="4.6"/><path d="M13.3 8.2 19.5 2M15 2h4.5v4.5M10 16.1V22.5M7.4 19.6h5.2"/></svg><span class="gc-label">Unisex</span></a>
     </div>
   </div>
 </section>
@@ -1358,7 +1369,12 @@
       <div>
         <span class="eyebrow">Hablemos</span>
         <h2 style="margin-top:14px;">¿Buscás una <em>fragancia</em><br>en particular?</h2>
-        <p class="lead">Contanos qué estás buscando — diseñador, árabe o importado — y te respondemos con disponibilidad y precio.</p>
+        <p class="lead">Contanos qué estás buscando — diseñador, árabe o nicho — y te respondemos con disponibilidad y precio.</p>
+        <div class="perf-types">
+          <div class="perf-type"><strong>Diseñador</strong><p>Fragancias de las grandes casas de moda y lujo, como Dior, Carolina Herrera o Rabanne. Son las más conocidas y fáciles de reconocer.</p></div>
+          <div class="perf-type"><strong>Nicho</strong><p>Casas dedicadas solo a la perfumería, con producciones más chicas, ingredientes seleccionados y aromas más originales y exclusivos.</p></div>
+          <div class="perf-type"><strong>Árabes</strong><p>Perfumería de Medio Oriente, como Lattafa, Armaf o Afnan. Aromas intensos y de gran duración, con oud, ámbar, especias y notas dulces.</p></div>
+        </div>
         <div class="cta-row">
           <a href="https://wa.me/5493416052132" class="btn-gold" target="_blank">Escribir por WhatsApp</a>
           <a href="https://www.instagram.com/maugefragancias" class="btn-outline" target="_blank">Ver Instagram</a>
@@ -1497,8 +1513,8 @@
   <div class="wrap">
     <button type="button" class="brand-results-close back-to-home" style="display:block; margin-bottom:18px;">← Volver al inicio</button>
     <div class="section-head" style="margin-bottom:28px;">
-      <span class="eyebrow on-light">Catálogo completo</span>
-      <h2>Todos los productos</h2>
+      <span class="eyebrow on-light" id="todosEyebrow">Catálogo completo</span>
+      <h2 id="todosTitle">Todos los productos</h2>
     </div>
 
     <div class="sort-filter-bar">
@@ -1689,16 +1705,25 @@
   (function(){
     const track = document.getElementById('heroSlides');
     if(!track) return;
-    const slides = Array.from(track.children);
+    let slides = Array.from(track.children);
     const dotsWrap = document.getElementById('heroDots');
     const prevBtn = document.getElementById('heroPrev');
     const nextBtn = document.getElementById('heroNext');
     let index = 0;
+    let dots = [];
 
-    if(dotsWrap){
-      dotsWrap.innerHTML = slides.map((_, i) => `<button type="button" class="hero-dot${i === 0 ? ' active' : ''}" data-i="${i}" aria-label="Ir a la imagen ${i + 1}"></button>`).join('');
+    function buildDots(){
+      if(!dotsWrap) return;
+      dotsWrap.innerHTML = slides.map((_, i) => `<button type="button" class="hero-dot${i === index ? ' active' : ''}" data-i="${i}" aria-label="Ir a la imagen ${i + 1}"></button>`).join('');
+      dots = Array.from(dotsWrap.children);
+      dots.forEach(d => d.addEventListener('click', () => go(parseInt(d.dataset.i, 10))));
     }
-    const dots = dotsWrap ? Array.from(dotsWrap.children) : [];
+    function updateControls(){
+      const multi = slides.length > 1;
+      if(nextBtn) nextBtn.classList.toggle('hidden', !multi);
+      if(dotsWrap) dotsWrap.classList.toggle('hidden', !multi);
+      if(prevBtn) prevBtn.classList.toggle('hidden', !multi || index === 0);
+    }
 
     function go(i){
       // el slide principal (0) es siempre el primero: no se puede volver antes de él, solo avanzar
@@ -1706,18 +1731,21 @@
       index = i % slides.length;
       track.style.transform = `translateX(-${index * 100}%)`;
       dots.forEach((d, di) => d.classList.toggle('active', di === index));
-      if(slides.length > 1 && prevBtn) prevBtn.classList.toggle('hidden', index === 0);
+      updateControls();
     }
 
-    if(slides.length > 1){
-      if(prevBtn) prevBtn.addEventListener('click', () => go(index - 1));
-      if(nextBtn) nextBtn.addEventListener('click', () => go(index + 1));
-      dots.forEach(d => d.addEventListener('click', () => go(parseInt(d.dataset.i, 10))));
-    } else {
-      if(prevBtn) prevBtn.classList.add('hidden');
-      if(nextBtn) nextBtn.classList.add('hidden');
-      if(dotsWrap) dotsWrap.classList.add('hidden');
-    }
+    if(prevBtn) prevBtn.addEventListener('click', () => go(index - 1));
+    if(nextBtn) nextBtn.addEventListener('click', () => go(index + 1));
+    buildDots();
+    updateControls();
+    // se llama cuando llegan los flyers desde Firestore, para recalcular slides/puntitos
+    window.heroRebuild = function(){
+      slides = Array.from(track.children);
+      index = 0;
+      buildDots();
+      updateControls();
+      go(0);
+    };
 
     // deslizar con el dedo (mobile) o el mouse (desktop)
     let startX = 0, currentX = 0, dragging = false;
@@ -1765,6 +1793,27 @@
   };
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
+
+  // ---------- FLYERS DEL INICIO (se administran desde admin.html) ----------
+  (function loadHeroFlyers(){
+    const esc = t => String(t || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    db.collection('productos').doc('_flyers').get().then(doc => {
+      const track = document.getElementById('heroSlides');
+      if(!track || !doc.exists) return;
+      const lista = (doc.data().lista || []).filter(f => f && f.pc && f.mobile && f.activo !== false);
+      track.querySelectorAll('.hero-ad-slide').forEach(el => el.remove());
+      track.insertAdjacentHTML('beforeend', lista.map(f => {
+        const titulo = f.titulo || f.marca || 'Publicidad';
+        return `<button type="button" class="hero-ad-slide" data-hero-brand="${esc(f.marca)}" aria-label="${esc('Publicidad ' + titulo + (f.marca ? ', tocá para ver los perfumes ' + f.marca : ''))}">
+      <picture>
+        <source media="(max-width:640px)" srcset="${esc(f.mobile)}">
+        <img src="${esc(f.pc)}" alt="${esc(titulo)}" loading="lazy">
+      </picture>
+    </button>`;
+      }).join(''));
+      if(window.heroRebuild) window.heroRebuild();
+    }).catch(err => console.warn('No se pudieron cargar los flyers', err));
+  })();
 
   let ofertas = [];
   let nuevos = [];
@@ -1836,19 +1885,20 @@
     const heroBrandAliases = {
       'emporio armani': ['emporio armani', 'armani']
     };
-    document.querySelectorAll('.hero-ad-slide').forEach(slide => {
-      slide.addEventListener('click', () => {
-        if(heroDragged){ heroDragged = false; return; }
-        const brandHint = (slide.dataset.heroBrand || '').trim();
-        if(!brandHint) return;
-        const target = brandHint.toLowerCase();
-        const aliases = heroBrandAliases[target] || [target];
-        // si ya hay algún producto cargado con alguno de esos nombres, usamos su nombre de marca tal cual está guardado (mismas mayúsculas/acentos)
-        const existing = Object.values(allProducts).find(p => aliases.includes((p.brand || '').toLowerCase()));
-        const brandKey = existing ? existing.brand : brandHint;
-        openStandaloneSection('marcas');
-        showBrandResults(brandKey, aliases);
-      });
+    const heroTrack = document.getElementById('heroSlides');
+    if(heroTrack) heroTrack.addEventListener('click', (e) => {
+      const slide = e.target.closest('.hero-ad-slide');
+      if(!slide) return;
+      if(heroDragged){ heroDragged = false; return; }
+      const brandHint = (slide.dataset.heroBrand || '').trim();
+      if(!brandHint) return;
+      const target = brandHint.toLowerCase();
+      const aliases = heroBrandAliases[target] || [target];
+      // si ya hay algún producto cargado con alguno de esos nombres, usamos su nombre de marca tal cual está guardado (mismas mayúsculas/acentos)
+      const existing = Object.values(allProducts).find(p => aliases.includes((p.brand || '').toLowerCase()));
+      const brandKey = existing ? existing.brand : brandHint;
+      openStandaloneSection('marcas');
+      showBrandResults(brandKey, aliases);
     });
   })();
 
@@ -2097,6 +2147,7 @@
 
   function openStandaloneSection(id, addHistory=true){
     if(addHistory) saveViewInHistory({type:'section',id});
+    if(id === 'todos-productos' && typeof setGeneroFilter === 'function') setGeneroFilter(null);
     showHomeFlow(false);
     categoriaFullSection.classList.remove('open');
     standaloneSectionIds.forEach(sid => {
@@ -2138,6 +2189,7 @@
       e.preventDefault();
       const [kind, val] = link.dataset.open.split(':');
       if(kind === 'categoria') openCategoriaFull(val);
+      else if(kind === 'genero') openGenero(val);
       else if(kind === 'home') closeAllStandalone();
       else openStandaloneSection(val);
     });
@@ -2149,6 +2201,7 @@
     if(!view || view.type === 'home') { closeAllStandalone(false); return; }
     if(view.type === 'section') { openStandaloneSection(view.id, false); return; }
     if(view.type === 'category') { openCategoriaFull(view.cat, false); return; }
+    if(view.type === 'genero') { openGenero(view.genero, false); return; }
     if(view.type === 'brand-list') {
       openStandaloneSection('marcas', false);
       document.getElementById('brandResults').style.display = 'none';
@@ -2253,6 +2306,7 @@
       btn.addEventListener('click', () => {
         filterGenero = (filterGenero === btn.dataset.genero) ? null : btn.dataset.genero;
         document.querySelectorAll('[data-genero]').forEach(o => o.classList.toggle('active', o.dataset.genero === filterGenero));
+        updateTodosTitle();
         renderTodos();
       });
     });
@@ -2261,8 +2315,30 @@
   document.getElementById('filterClearBtn').addEventListener('click', () => {
     filterBrand = null; filterType = null; filterGenero = null;
     document.querySelectorAll('.sf-chip-option').forEach(o => o.classList.remove('active'));
+    updateTodosTitle();
     renderTodos();
   });
+
+  // ---------- recuadros Femeninos / Masculinos / Unisex ----------
+  const generoTitles = { Mujer:'Perfumes femeninos', Hombre:'Perfumes masculinos', Unisex:'Perfumes unisex' };
+  function updateTodosTitle(){
+    document.getElementById('todosTitle').textContent = generoTitles[filterGenero] || 'Todos los productos';
+  }
+  function setGeneroFilter(g){
+    filterGenero = g;
+    document.querySelectorAll('[data-genero]').forEach(o => o.classList.toggle('active', o.dataset.genero === g));
+    updateTodosTitle();
+    renderTodos();
+  }
+  window.setGeneroFilter = setGeneroFilter;
+  function openGenero(g, addHistory=true){
+    if(addHistory) saveViewInHistory({type:'genero', genero:g});
+    openStandaloneSection('todos-productos', false);
+    filterBrand = null; filterType = null;
+    document.querySelectorAll('[data-brand],[data-type]').forEach(o => o.classList.remove('active'));
+    setGeneroFilter(g);
+  }
+  window.openGenero = openGenero;
 
   // ---------- BÚSQUEDA GLOBAL (marca o nombre) ----------
   const searchOverlay = document.getElementById('searchOverlay');

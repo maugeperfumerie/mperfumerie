@@ -62,6 +62,32 @@
   .item .chk{flex-shrink:0}
   .item .chk input{width:auto;margin:0}
   .item-count{font-size:12px;color:#777;margin:0 0 8px}
+  /* ---------- Flyers del inicio ---------- */
+  .fl-card{margin-bottom:20px}
+  .fl-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+  .fl-head button{margin:0}
+  .fl-list{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+  .fl-item{display:grid;grid-template-columns:34px 1fr auto;gap:12px;align-items:center;background:#111;border:1px solid var(--border);border-radius:10px;padding:10px}
+  .fl-pos{font-size:18px;font-weight:bold;color:var(--gold);text-align:center}
+  .fl-imgs{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+  .fl-imgs figure{margin:0;text-align:center}
+  .fl-imgs figcaption{font-size:10px;color:#888;margin-top:3px;text-transform:uppercase;letter-spacing:.05em}
+  .fl-imgs .th-pc{width:210px;aspect-ratio:1700/568;object-fit:cover;border-radius:6px;border:1px solid #333;display:block}
+  .fl-imgs .th-mo{height:70px;aspect-ratio:2/3;object-fit:cover;border-radius:6px;border:1px solid #333;display:block}
+  .fl-meta{min-width:160px;flex:1}
+  .fl-meta input{margin:2px 0;padding:7px;font-size:13px}
+  .fl-actions{display:flex;flex-direction:column;gap:6px}
+  .fl-actions button{margin:0;padding:6px 10px;font-size:12px}
+  .fl-add{margin-top:16px;border-top:1px solid var(--border);padding-top:14px}
+  .fl-drops{display:grid;grid-template-columns:1.6fr 1fr;gap:14px;margin-top:8px}
+  .fl-drop{border:1px dashed #444;border-radius:10px;padding:10px;background:#0f0f0f}
+  .fl-drop h4{margin:0 0 2px;font-size:13px;color:var(--gold)}
+  .fl-drop p{margin:0 0 6px;font-size:11px;color:#888}
+  .fl-drop canvas{width:100%;border-radius:6px;border:1px solid #333;display:none;background:#000}
+  .fl-drop .fl-err{color:#e57373;font-size:12px;margin-top:4px}
+  .fl-drop input[type=range]{padding:0;margin:6px 0 0}
+  .fl-status{font-size:13px;margin-top:8px;color:#aaa}
+  @media (max-width:700px){ .fl-drops{grid-template-columns:1fr} .fl-item{grid-template-columns:28px 1fr} .fl-actions{grid-column:1/-1;flex-direction:row;flex-wrap:wrap} .fl-imgs .th-pc{width:100%} }
 </style>
 </head>
 <body>
@@ -82,6 +108,55 @@
       <p class="muted" id="userEmail"></p>
     </div>
     <button class="secondary" id="btnLogout">Cerrar sesión</button>
+  </div>
+
+  <div class="card fl-card" id="flyersCard">
+    <div class="fl-head">
+      <div><b>Flyers del inicio</b> <span class="muted" style="margin:0">— las publicidades que pasan después de la portada. Cada flyer lleva 2 fotos: una para PC y otra para celular.</span></div>
+      <button type="button" class="secondary" id="flToggle">Mostrar</button>
+    </div>
+    <div id="flBody" class="hidden">
+      <div class="fl-list" id="flList"></div>
+
+      <div class="fl-add">
+        <b>+ Agregar flyer nuevo</b>
+        <div class="row" style="flex-wrap:wrap">
+          <div style="flex:1;min-width:200px">
+            <label>Marca (al tocar el flyer se abre esta marca)</label>
+            <input id="flMarca" list="flMarcasList" placeholder="Ej: Rabanne">
+            <datalist id="flMarcasList"></datalist>
+          </div>
+          <div style="flex:1;min-width:200px">
+            <label>Nombre del flyer (opcional, ej: "Rabanne Fame")</label>
+            <input id="flTitulo" placeholder="Ej: Rabanne Fame">
+          </div>
+          <div style="min-width:170px">
+            <label>Ubicación</label>
+            <select id="flPos"><option value="first">Primero (apenas después de la portada)</option><option value="last">Al final</option></select>
+          </div>
+        </div>
+        <div class="fl-drops">
+          <div class="fl-drop">
+            <h4>1 · Foto para PC (horizontal)</h4>
+            <p>Imagen ancha y baja. Se ajusta sola a la proporción del carrusel (3 a 1).</p>
+            <input type="file" id="flFilePc" accept="image/*">
+            <canvas id="flCanvasPc" width="1700" height="568"></canvas>
+            <input type="range" id="flPosPc" min="0" max="100" value="50" class="hidden" title="Mover el encuadre">
+            <div class="fl-err" id="flErrPc"></div>
+          </div>
+          <div class="fl-drop">
+            <h4>2 · Foto para celular (vertical)</h4>
+            <p>Imagen alta, tipo historia. Se ajusta sola a la proporción del celular (2 a 3).</p>
+            <input type="file" id="flFileMo" accept="image/*">
+            <canvas id="flCanvasMo" width="1000" height="1500" style="max-width:220px"></canvas>
+            <input type="range" id="flPosMo" min="0" max="100" value="50" class="hidden" title="Mover el encuadre" style="max-width:220px">
+            <div class="fl-err" id="flErrMo"></div>
+          </div>
+        </div>
+        <button type="button" id="flAgregar" disabled>Agregar flyer</button>
+        <div class="fl-status" id="flStatus"></div>
+      </div>
+    </div>
   </div>
 
   <div class="grid">
@@ -261,6 +336,172 @@
   const auth = firebase.auth();
   const db = firebase.firestore();
   const storage = firebase.storage();
+
+  // ---------- FLYERS DEL INICIO ----------
+  // se guardan en un documento especial productos/_flyers (sin campo "orden", así no aparece como producto)
+  // cada flyer: {id, marca, titulo, pc, mobile, pcPath, mobilePath}
+  const FL_DOC = db.collection('productos').doc('_flyers');
+  const FL_PC = {w:1700, h:568}, FL_MO = {w:1000, h:1500};
+  let flyers = [];
+  const flState = { pc:null, mo:null };
+
+  document.getElementById('flToggle').onclick = () => {
+    const body = document.getElementById('flBody');
+    body.classList.toggle('hidden');
+    document.getElementById('flToggle').textContent = body.classList.contains('hidden') ? 'Mostrar' : 'Ocultar';
+    if(!body.classList.contains('hidden')) cargarFlyers();
+  };
+
+  function flEsc(t){ return String(t||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  async function cargarFlyers(){
+    const d = await FL_DOC.get();
+    flyers = d.exists ? (d.data().lista || []) : [];
+    renderFlyers();
+    const marcas = [...new Set(Object.values(productos).map(p => p.brand).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));
+    document.getElementById('flMarcasList').innerHTML = marcas.map(m => `<option value="${flEsc(m)}">`).join('');
+  }
+
+  async function guardarFlyers(){
+    await FL_DOC.set({ lista: flyers, actualizado: firebase.firestore.FieldValue.serverTimestamp() });
+  }
+
+  function renderFlyers(){
+    const el = document.getElementById('flList');
+    if(!flyers.length){ el.innerHTML = '<p class="muted" style="margin:0">Todavía no hay flyers. En la página se va a ver solo la portada.</p>'; return; }
+    el.innerHTML = flyers.map((f, i) => `
+      <div class="fl-item" data-i="${i}">
+        <div class="fl-pos">${i+1}</div>
+        <div class="fl-imgs">
+          <figure><img class="th-pc" src="${flEsc(f.pc)}" alt=""><figcaption>PC</figcaption></figure>
+          <figure><img class="th-mo" src="${flEsc(f.mobile)}" alt=""><figcaption>Celular</figcaption></figure>
+          <div class="fl-meta">
+            <label style="margin:0">Marca</label>
+            <input class="fl-edit-marca" value="${flEsc(f.marca)}" list="flMarcasList">
+            <label style="margin:0">Nombre</label>
+            <input class="fl-edit-titulo" value="${flEsc(f.titulo)}">
+          </div>
+        </div>
+        <div class="fl-actions">
+          <button type="button" class="secondary fl-up" ${i===0?'disabled':''}>↑ Subir</button>
+          <button type="button" class="secondary fl-down" ${i===flyers.length-1?'disabled':''}>↓ Bajar</button>
+          <button type="button" class="danger fl-del">Quitar</button>
+        </div>
+      </div>`).join('');
+    el.querySelectorAll('.fl-item').forEach(row => {
+      const i = +row.dataset.i;
+      row.querySelector('.fl-up').onclick = () => moverFlyer(i, -1);
+      row.querySelector('.fl-down').onclick = () => moverFlyer(i, 1);
+      row.querySelector('.fl-del').onclick = () => quitarFlyer(i);
+      row.querySelector('.fl-edit-marca').onchange = async e => { flyers[i].marca = e.target.value.trim(); await guardarFlyers(); flMsg('Marca actualizada ✔'); };
+      row.querySelector('.fl-edit-titulo').onchange = async e => { flyers[i].titulo = e.target.value.trim(); await guardarFlyers(); flMsg('Nombre actualizado ✔'); };
+    });
+  }
+
+  function flMsg(t){ document.getElementById('flStatus').textContent = t; }
+
+  async function moverFlyer(i, dir){
+    const j = i + dir;
+    if(j < 0 || j >= flyers.length) return;
+    [flyers[i], flyers[j]] = [flyers[j], flyers[i]];
+    renderFlyers();
+    await guardarFlyers();
+    flMsg('Orden guardado ✔');
+  }
+
+  async function quitarFlyer(i){
+    const f = flyers[i];
+    if(!confirm(`¿Quitar el flyer ${i+1}${f.titulo ? ' ('+f.titulo+')' : (f.marca ? ' ('+f.marca+')' : '')} de la página?`)) return;
+    flyers.splice(i, 1);
+    await guardarFlyers();
+    renderFlyers();
+    for(const path of [f.pcPath, f.mobilePath]){ if(path){ try{ await storage.ref(path).delete(); }catch(e){} } }
+    flMsg('Flyer quitado ✔');
+  }
+
+  // recorta la imagen a la proporción exacta (sin deformar), moviendo el encuadre según pos (0 a 1)
+  function flDibujar(canvas, img, target, pos){
+    const ratio = target.w / target.h;
+    const iw = img.naturalWidth, ih = img.naturalHeight;
+    let sx, sy, sw, sh;
+    if(iw / ih > ratio){ sh = ih; sw = ih * ratio; sx = (iw - sw) * pos; sy = 0; }
+    else { sw = iw; sh = iw / ratio; sx = 0; sy = (ih - sh) * pos; }
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, target.w, target.h);
+    canvas.style.display = 'block';
+    return Math.abs(iw/ih - ratio) / ratio > 0.01; // true si hubo que recortar
+  }
+
+  function flSetup(tipo){
+    const isPc = tipo === 'pc';
+    const file = document.getElementById(isPc ? 'flFilePc' : 'flFileMo');
+    const canvas = document.getElementById(isPc ? 'flCanvasPc' : 'flCanvasMo');
+    const range = document.getElementById(isPc ? 'flPosPc' : 'flPosMo');
+    const err = document.getElementById(isPc ? 'flErrPc' : 'flErrMo');
+    const target = isPc ? FL_PC : FL_MO;
+    const key = isPc ? 'pc' : 'mo';
+    file.onchange = () => {
+      err.textContent = ''; flState[key] = null; canvas.style.display = 'none'; range.classList.add('hidden');
+      const f = file.files[0];
+      if(!f){ flCheck(); return; }
+      const img = new Image();
+      img.onload = () => {
+        const horizontal = img.naturalWidth > img.naturalHeight * 1.3;
+        const vertical = img.naturalHeight > img.naturalWidth;
+        if(isPc && !horizontal){ err.textContent = 'Esta foto no es horizontal. Para PC tiene que ser ancha y baja (¿la pusiste en el lugar del celular?).'; flCheck(); return; }
+        if(!isPc && !vertical){ err.textContent = 'Esta foto no es vertical. Para celular tiene que ser alta (¿la pusiste en el lugar de PC?).'; flCheck(); return; }
+        const recorta = flDibujar(canvas, img, target, range.value / 100);
+        range.classList.toggle('hidden', !recorta);
+        flState[key] = img;
+        flCheck();
+      };
+      img.onerror = () => { err.textContent = 'No se pudo leer la imagen.'; flCheck(); };
+      img.src = URL.createObjectURL(f);
+    };
+    range.oninput = () => { if(flState[key]) flDibujar(canvas, flState[key], target, range.value / 100); };
+  }
+  flSetup('pc'); flSetup('mo');
+
+  function flCheck(){
+    document.getElementById('flAgregar').disabled = !(flState.pc && flState.mo && document.getElementById('flMarca').value.trim());
+  }
+  document.getElementById('flMarca').oninput = flCheck;
+
+  function flBlob(canvas){ return new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.88)); }
+
+  document.getElementById('flAgregar').onclick = async () => {
+    const btn = document.getElementById('flAgregar');
+    btn.disabled = true; flMsg('Subiendo fotos...');
+    try{
+      const id = Date.now().toString(36);
+      const pcPath = `productos/_flyers/${id}_pc.jpg`, mobilePath = `productos/_flyers/${id}_celular.jpg`;
+      const pcRef = storage.ref(pcPath), moRef = storage.ref(mobilePath);
+      await pcRef.put(await flBlob(document.getElementById('flCanvasPc')), {contentType:'image/jpeg'});
+      await moRef.put(await flBlob(document.getElementById('flCanvasMo')), {contentType:'image/jpeg'});
+      const nuevo = {
+        id,
+        marca: document.getElementById('flMarca').value.trim(),
+        titulo: document.getElementById('flTitulo').value.trim(),
+        pc: await pcRef.getDownloadURL(), mobile: await moRef.getDownloadURL(),
+        pcPath, mobilePath
+      };
+      const d = await FL_DOC.get();
+      flyers = d.exists ? (d.data().lista || []) : [];
+      if(document.getElementById('flPos').value === 'first') flyers.unshift(nuevo); else flyers.push(nuevo);
+      await guardarFlyers();
+      renderFlyers();
+      // limpiar formulario
+      ['flMarca','flTitulo','flFilePc','flFileMo'].forEach(x => document.getElementById(x).value = '');
+      ['flCanvasPc','flCanvasMo'].forEach(x => document.getElementById(x).style.display = 'none');
+      ['flPosPc','flPosMo'].forEach(x => { const r = document.getElementById(x); r.value = 50; r.classList.add('hidden'); });
+      flState.pc = flState.mo = null;
+      flMsg('Flyer agregado ✔ Ya se ve en la página.');
+    }catch(e){
+      flMsg('Error al subir: ' + e.message);
+    }
+    flCheck();
+  };
 
   // ---------- Login ----------
   document.getElementById('btnLogin').onclick = async () => {
