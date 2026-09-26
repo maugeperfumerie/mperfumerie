@@ -146,11 +146,11 @@
     position:fixed; top:0; left:0; height:100%; width:min(320px, 82vw); z-index:200;
     background: var(--black);
     display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-start;
-    box-shadow: 18px 0 50px -12px rgba(0,0,0,0.5);
-    transform: translateX(-100%); transition: transform .38s cubic-bezier(.16,1,.3,1);
+    box-shadow: none; /* cerrado: sin sombra (si no, se ve una franja gris en el borde izquierdo) */
+    transform: translateX(-100%); transition: transform .38s cubic-bezier(.16,1,.3,1), box-shadow .38s ease;
     overflow-y:auto; padding: 84px 0 40px;
   }
-  .mobile-nav.open{ transform: translateX(0); }
+  .mobile-nav.open{ transform: translateX(0); box-shadow: 18px 0 50px -12px rgba(0,0,0,0.5); }
   .mobile-nav-list{ width:100%; padding:0 26px; display:flex; flex-direction:column; }
   .mn-link{
     font-family:var(--serif); font-size:19px; color:var(--white); letter-spacing:0.01em; font-weight:400;
@@ -850,14 +850,20 @@
     color:rgba(10,9,8,0.4); margin-bottom:34px;
   }
   .brands-fade{
-    overflow:hidden; width:100%;
-    -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 8%, #000 92%, transparent 100%);
-            mask-image: linear-gradient(90deg, transparent 0%, #000 8%, #000 92%, transparent 100%);
+    overflow:hidden; width:100%; position:relative;
   }
+  /* el difuminado de los costados va con dos degradés encima (antes era una "máscara", que en iPhone podía congelar o esconder la cinta) */
+  .brands-fade::before, .brands-fade::after{
+    content:""; position:absolute; top:0; bottom:0; width:8%; z-index:1; pointer-events:none;
+  }
+  .brands-fade::before{ left:0; background:linear-gradient(90deg, var(--white) 0%, rgba(250,248,245,0) 100%); }
+  .brands-fade::after{ right:0; background:linear-gradient(270deg, var(--white) 0%, rgba(250,248,245,0) 100%); }
   .brands-track{
     display:flex; align-items:center; width:max-content;
     animation: brandsScroll 140s linear infinite;
+    will-change:transform; -webkit-backface-visibility:hidden; backface-visibility:hidden;
   }
+  .brands-strip.is-offscreen .brands-track{ animation-play-state:paused; } /* fuera de pantalla se pausa (menos trabajo para el celular) */
   @media (hover: hover) and (pointer: fine){
     .brands-track:hover{ animation-play-state: paused; }
     .brands-track .brand-item:hover{ opacity:.9; }
@@ -888,8 +894,8 @@
   .bv-title-serif{ font-family:var(--serif); font-size:22px; font-weight:500; letter-spacing:0.01em; }
   .bv-sans-tight{ font-family:var(--sans); font-size:20px; font-weight:800; letter-spacing:-0.01em; text-transform:uppercase; }
   @keyframes brandsScroll{
-    from{ transform:translateX(0); }
-    to{ transform:translateX(-50%); }
+    from{ transform:translate3d(0,0,0); }
+    to{ transform:translate3d(-50%,0,0); }
   }
 
   /* ---------- CATALOG SECTIONS (Perfumes / Perfumería / Marcas) ---------- */
@@ -1099,7 +1105,7 @@
 <script>
   /* Versión de la página: si el navegador tiene guardada una versión vieja, se recarga sola (una vez) mientras se ve el logo.
      Al subir cambios, se sube también version.json con el mismo número que MP_BUILD. */
-  window.MP_BUILD = '2026-09-26b';
+  window.MP_BUILD = '2026-09-26d';
   window.__mpVersionOK = false;
   (function(){
     function ok(){ window.__mpVersionOK = true; }
@@ -1119,8 +1125,8 @@
     }catch(e){ ok(); }
   })();
 </script>
-<link rel="stylesheet" href="experience/experience.css?v=2026-09-26b">
-<script src="experience/experience.js?v=2026-09-26b" defer></script>
+<link rel="stylesheet" href="experience/experience.css?v=2026-09-26d">
+<script src="experience/experience.js?v=2026-09-26d" defer></script>
 </head>
 <body>
 <!-- Intro de marca (se saltea con el botón, tocando la pantalla o con Esc; no se muestra con "reducir movimiento") -->

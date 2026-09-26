@@ -184,7 +184,10 @@
   /* ------------------------------------------------------------ 3) TRANSICIÓN AL CATÁLOGO */
   function initReveal(){
     if(reduceMotion || !('IntersectionObserver' in window)) return;
-    var targets = doc.querySelectorAll('.gender-cats .gender-grid, .brands-strip, .contact-grid');
+    // la cinta de marcas se pausa cuando no está en pantalla
+    var strip = doc.querySelector('.brands-strip');
+    if(strip) new IntersectionObserver(function(en){ strip.classList.toggle('is-offscreen', !en[0].isIntersecting); }).observe(strip);
+    var targets = doc.querySelectorAll('.gender-cats .gender-grid, .contact-grid'); // la cinta de marcas ya no se oculta hasta llegar: siempre visible
     var io = new IntersectionObserver(function(entries){
       entries.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add('is-in'); io.unobserve(en.target); } });
     }, { rootMargin:'0px 0px -8% 0px', threshold:0.08 });
@@ -271,12 +274,17 @@
     if(!canvas || reduceMotion || !canvas.getContext) return;
     var ctx = canvas.getContext('2d'), W = 0, H = 0, dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     var dust = [], mist = [], running = false, visible = true, lastT = 0;
+    var emit = true, target = 0, spawnAcc = 0, sized = false, gA = 1; // gA: brillo general (se apaga suave al bajar)
+    // al cambiar el tamaño (en el celular pasa al bajar, cuando se esconde la barra del navegador)
+    // los destellos NO se vuelven a crear: siguen su camino, solo se reacomodan (así no hay "saltos" de loop)
     function resize(){
-      var r = canvas.getBoundingClientRect(); W = r.width; H = r.height;
+      var r = canvas.getBoundingClientRect(), nW = r.width, nH = r.height;
+      if(!nW || !nH) return;
+      if(sized){ var sx = nW / W, sy = nH / H; dust.forEach(function(p){ p.x *= sx; p.y *= sy; }); }
+      W = nW; H = nH;
       canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      var n = W < 760 ? 60 : 120; // EXP 2: muchos puntitos, nacen abajo (Ver catálogo / burbujas)
-      dust = [];
-      for(var i = 0; i < n; i++) dust.push(newDust(true));
+      target = W < 760 ? 26 : 80; // cantidad de destellos (celular : compu)
+      if(!sized){ sized = true; for(var i = 0; i < target; i++) dust.push(newDust(true)); } // al entrar ya hay destellos
     }
     function newDust(anyY){
       // nacen en la franja de abajo (más cerca de "Ver catálogo") y suben despacio
@@ -295,15 +303,23 @@
       var dt = Math.min(48, t - (lastT || t)); lastT = t;
       ctx.clearRect(0, 0, W, H);
       ctx.globalCompositeOperation = 'lighter';
-      for(var i = 0; i < dust.length; i++){
+      if(emit && dust.length < target){                    // volviste a la portada: aparecen de a poco desde abajo
+        spawnAcc += dt * target / 2600;
+        while(spawnAcc >= 1 && dust.length < target){ dust.push(newDust(false)); spawnAcc--; }
+      }
+      gA += ((emit ? 1 : 0) - gA) * Math.min(1, dt / 380);
+      if(!emit && gA < .02){ dust.length = 0; gA = 0; }       // bajaste: se terminaron de apagar
+      ctx.globalAlpha = gA;
+      for(var i = dust.length - 1; i >= 0; i--){
         var p = dust[i];
         p.y -= p.vy * dt * .06 * (1 + p.z); p.ph += dt * .0012;
-        if(p.y < -10){ dust[i] = newDust(false); continue; }
+        if(p.y < -10){ if(emit) dust[i] = newDust(false); else dust.splice(i, 1); continue; } // bajaste: terminan de subir y no salen nuevos
         var x = p.x + Math.sin(p.ph) * 8 * p.sw, y = p.y;
         var fade = Math.max(0, Math.min(1, (y / H - .08) / .62)); // se van apagando al subir entre los perfumes
         fade = fade * fade * (3 - 2 * fade);
         dot(x, y, p.r * (0.7 + p.z * .6), (.4 + .45 * Math.abs(Math.sin(p.ph * 1.2))) * (.45 + p.z * .55) * fade);
       }
+      ctx.globalAlpha = 1;
       for(var k = mist.length - 1; k >= 0; k--){
         var m = mist[k]; m.life -= dt;
         if(m.life <= 0){ mist.splice(k, 1); continue; }
@@ -311,17 +327,22 @@
         dot(m.x, m.y, m.r, Math.min(1, m.life / 500) * .75);
       }
       ctx.globalCompositeOperation = 'source-over';
+      if(!emit && !dust.length && !mist.length){ running = false; ctx.clearRect(0, 0, W, H); return; } // ya no queda ninguno: se frena
       requestAnimationFrame(frame);
     }
+    var ratio = 1;
+    window.__xpDust = function(){ return { n: dust.length, running: running, emit: emit, first: dust[0] ? Math.round(dust[0].y) : null }; }; // para revisar
     function update(){
-      var should = visible && !doc.hidden && hero.classList.contains('is-active');
+      emit = ratio >= .55 && !doc.hidden && hero.classList.contains('is-active');
+      if(!visible){ dust.length = 0; mist.length = 0; spawnAcc = 0; } // la portada salió de la pantalla: al volver, aparecen de nuevo desde abajo
+      var should = visible && !doc.hidden && hero.classList.contains('is-active') && (emit || dust.length || mist.length);
       if(should && !running){ running = true; lastT = 0; requestAnimationFrame(frame); }
       else if(!should){ running = false; }
     }
     resize();
     window.addEventListener('resize', function(){ clearTimeout(canvas._t); canvas._t = setTimeout(resize, 150); });
     doc.addEventListener('visibilitychange', update);
-    if('IntersectionObserver' in window) new IntersectionObserver(function(en){ visible = en[0].isIntersecting; update(); }, { threshold:0.05 }).observe(hero);
+    if('IntersectionObserver' in window) new IntersectionObserver(function(en){ visible = en[0].isIntersecting; ratio = en[0].intersectionRatio; update(); }, { threshold:[0, .05, .3, .55, .8, 1] }).observe(hero);
     new MutationObserver(update).observe(hero, { attributes:true, attributeFilter:['class'] });
     update();
     // tocar la foto (no los botones) suelta un "rocío" dorado, como un spray de perfume
