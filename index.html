@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>M Perfumerie — Maison Parfum</title>
+<title>EXP 2 · M Perfumerie — Maison Parfum</title>
 <link rel="icon" type="image/png" href="images/img-01-1b60c24048.png">
 <meta property="og:title" content="M Perfumerie — Perfumes importados">
 <meta property="og:description" content="Perfumes importados originales, árabes y de diseñador. Todo 100% original.">
@@ -569,14 +569,14 @@
   .gender-card:hover{ border-color:rgba(10,9,8,0.25); color:rgba(10,9,8,0.7); transform:translateY(-2px); }
   .gender-card:hover svg{ color:rgba(10,9,8,0.55); }
   .gender-card:active{ transform:scale(0.98); }
-  .gender-card svg{ width:17px; height:17px; flex:none; color:rgba(10,9,8,0.35); transition:color .25s ease; }
+  .gender-card svg{ width:21px; height:21px; flex:none; color:rgba(10,9,8,0.38); transition:color .25s ease; margin:-3px 0; } /* perfil de un trazo */
   .gender-card .gc-label{ font-family:var(--serif); font-weight:400; font-size:15px; letter-spacing:-0.005em; }
   .gender-cats + .products{ padding-top:64px; }
   @media (max-width:640px){
     .gender-cats{ padding-top:18px; }
     .gender-grid{ max-width:none; gap:8px; }
     .gender-card{ gap:5px; padding:8px 4px; border-radius:8px; }
-    .gender-card svg{ width:14px; height:14px; }
+    .gender-card svg{ width:16px; height:16px; margin:-2px 0; }
     .gender-card .gc-label{ font-size:12.5px; }
     .gender-cats + .products{ padding-top:48px; }
   }
@@ -783,6 +783,37 @@
     65%{ opacity:1; transform:scale(1) translateY(0); }
     90%{ opacity:0; transform:scale(.65) translateY(2px); }
   }
+
+  /* fueguito v3: mismo dibujo y colores; toda la llama respira apenas y las lenguitas de los costados aparecen y se van suave */
+  .hot-badge-v3{ animation:flameBob 3.2s ease-in-out infinite; }
+  .hot-badge-v3 .flame-outer{ fill:#f5871f; stroke:rgba(58,18,4,.45); stroke-width:.6; stroke-linejoin:round; animation:flameOuterPulse 3s ease-in-out infinite; }
+  .hot-badge-v3 .flame-inner{ fill:#ffd23f; animation:flameInnerPulse 2.6s ease-in-out infinite; }
+  .hot-badge-v3 .flame-core{ fill:#fff6da; }
+  .hot-badge-v3 .flame-lick{ fill:#f5871f; opacity:0; transform-box:view-box; }
+  .hot-badge-v3 .flame-lick-l{ transform-origin:4px 13px; animation:flameLickSoft 2.6s cubic-bezier(.45,0,.55,1) infinite; }
+  .hot-badge-v3 .flame-lick-r{ transform-origin:24px 12px; animation:flameLickSoft 3s cubic-bezier(.45,0,.55,1) .9s infinite; }
+  /* de vez en cuando una lenguita se despega, sube un poco más y se difumina */
+  .hot-badge-v3 .flame-fly-l{ transform-origin:4px 13px; animation:flameFlyL 5.2s cubic-bezier(.3,0,.4,1) 1.6s infinite; }
+  .hot-badge-v3 .flame-fly-r{ transform-origin:24px 12px; animation:flameFlyR 6s cubic-bezier(.3,0,.4,1) 3.8s infinite; }
+  @keyframes flameLickSoft{
+    0%{ opacity:0; transform:translateY(1.6px) scale(.55); }
+    30%{ opacity:1; transform:translateY(0) scale(1); }
+    62%{ opacity:.95; transform:translateY(-.5px) scale(.97); }
+    100%{ opacity:0; transform:translateY(-1.8px) scale(.6); }
+  }
+  @keyframes flameFlyL{
+    0%{ opacity:0; transform:translate(0,1.5px) scale(.5); filter:blur(0); }
+    12%{ opacity:.9; transform:translate(0,0) scale(.9); filter:blur(0); }
+    40%{ opacity:.55; transform:translate(-.6px,-4px) scale(.7); filter:blur(.35px); }
+    58%,100%{ opacity:0; transform:translate(-1px,-7px) scale(.45); filter:blur(.8px); }
+  }
+  @keyframes flameFlyR{
+    0%{ opacity:0; transform:translate(0,1.5px) scale(.5); filter:blur(0); }
+    12%{ opacity:.9; transform:translate(0,0) scale(.9); filter:blur(0); }
+    40%{ opacity:.55; transform:translate(.6px,-4px) scale(.7); filter:blur(.35px); }
+    58%,100%{ opacity:0; transform:translate(1px,-7px) scale(.45); filter:blur(.8px); }
+  }
+  @media (prefers-reduced-motion: reduce){ .hot-badge-v3, .hot-badge-v3 *{ animation:none !important; } }
   .prod-img-wrap{ padding:0; height:170px; background:#ffffff; position:relative; overflow:hidden; }
   .prod-img{ position:absolute; left:0; right:0; bottom:0; width:100%; height:100%; object-fit:contain; object-position:center bottom; display:block; background:#ffffff; }
   .prod-img-overlay{ position:absolute; inset:0; opacity:0; transition:opacity .7s ease; }
@@ -1056,8 +1087,53 @@
     *{ animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; scroll-behavior:auto !important; }
   }
 </style>
+<!-- EXPERIMENTAL: experiencia de inicio (intro + campaña). Ver experience/ -->
+<script>
+  (function(){ try{
+    var force = /[?&]intro=1/.test(location.search);
+    if(!force && sessionStorage.getItem('xpIntroSeen')) document.documentElement.classList.add('xp-no-intro');
+  }catch(e){} })();
+</script>
+<script>
+  /* Versión de la página: si el navegador tiene guardada una versión vieja, se recarga sola (una vez) mientras se ve el logo.
+     Al subir cambios, se sube también version.json con el mismo número que MP_BUILD. */
+  window.MP_BUILD = '2026-09-26a';
+  window.__mpVersionOK = false;
+  (function(){
+    function ok(){ window.__mpVersionOK = true; }
+    try{
+      fetch('version.json?t=' + Date.now(), { cache:'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(v){
+        if(v && v.build && v.build !== window.MP_BUILD){
+          var k = 'mpReloadedFor';
+          if(sessionStorage.getItem(k) !== v.build){
+            sessionStorage.setItem(k, v.build);
+            var u = new URL(location.href); u.searchParams.set('v', v.build);
+            location.replace(u.toString()); return;
+          }
+        }
+        ok();
+      }).catch(ok);
+      setTimeout(ok, 2500); // si version.json tarda, no se espera más
+    }catch(e){ ok(); }
+  })();
+</script>
+<link rel="stylesheet" href="experience/experience.css?v=2026-09-26a">
+<script src="experience/experience.js?v=2026-09-26a" defer></script>
 </head>
 <body>
+<!-- Intro de marca (se saltea con el botón, tocando la pantalla o con Esc; no se muestra con "reducir movimiento") -->
+<div class="xp-intro" id="xpIntro" role="presentation">
+  <!-- la M se "carga" por partes: primero la barrita izquierda, después la del medio, la derecha y al final el diamante -->
+  <div class="xp-intro-mark" id="xpMark" role="progressbar" aria-label="Cargando M Perfumerie" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+    <img class="xp-m-ghost" src="images/img-02-bf96bbd8b9.png" alt="" data-asset="logo-m">
+    <span class="xp-m-piece xp-m-left"><img src="images/img-02-bf96bbd8b9.png" alt=""></span>
+    <span class="xp-m-piece xp-m-mid"><img src="images/img-02-bf96bbd8b9.png" alt=""></span>
+    <span class="xp-m-piece xp-m-right"><img src="images/img-02-bf96bbd8b9.png" alt=""></span>
+    <span class="xp-m-piece xp-m-gem"><img src="images/img-02-bf96bbd8b9.png" alt=""></span>
+  </div>
+  <button type="button" class="xp-intro-skip">Saltar intro</button>
+</div>
+
 
 <header id="siteHeader">
   <div class="nav-left">
@@ -1215,36 +1291,41 @@
   </div>
 </div>
 
-<section class="hero home-flow" id="top">
-  <div class="hero-slides" id="heroSlides">
-    <div class="hero-slide-main" data-slide="0">
-      <div class="hero-art"><picture><source media="(max-width:640px)" srcset="images/img-03-f0d5572a1c.jpg"><img class="hero-photo" src="images/img-04-7a178ec439.jpg" alt="Perfumes M Perfumerie"></picture></div>
-      <div class="hero-art-scrim"></div>
-      <div class="hero-content wrap">
-        <img class="hero-logo-mark" src="images/img-02-bf96bbd8b9.png" alt="M Perfumerie">
-        <p class="hero-script">Perfumes de</p>
-        <h1 class="hero-title-stack">
-          <span class="hts-line">Diseñador</span>
-          <span class="hts-line">Nicho</span>
-          <span class="hts-line">Árabes</span>
-        </h1>
-        <div class="hero-divider"></div>
-        <p class="hero-kicker">Perfumería importada en Rosario</p>
-        <p class="hero-desc" id="heroDesc">Elegís el producto en la página y coordinás por WhatsApp el pago y el envío.</p>
-        <div class="cta-row">
-          <a class="btn-gold hero-cta" href="#todos-productos" data-open="section:todos-productos">Ver catálogo <span class="hc-arrow">→</span></a>
+<section class="xp-campaign home-flow" id="top" aria-roledescription="carousel" aria-label="Campañas de M Perfumerie">
+  <div class="xp-viewport" id="xpViewport" tabindex="0" aria-label="Campañas. Usá las flechas del teclado para pasar.">
+      <div class="xp-slide xp-slide--hero" data-title="M Perfumerie" role="group" aria-roledescription="slide" id="xpHero">
+        <!-- EXPERIMENTAL 2: la portada es una foto fija (los perfumes NO se mueven) con más destellos dorados por delante.
+             Para cambiar la foto: reemplazar images/hero-foto-pc.jpg (horizontal) e images/hero-foto-mobile.jpg (vertical). -->
+        <div class="xp-hero-media" aria-hidden="true">
+          <div class="xp-hero-layer" id="xpHeroLayer">
+            <picture><source media="(max-width:760px)" srcset="images/hero-foto-mobile.jpg"><img class="xp-hero-img" src="images/hero-foto-pc.jpg" alt="" data-asset="hero-perfumes-flotando" draggable="false"></picture>
+          </div>
+          <canvas class="xp-hero-dust" id="xpDust"></canvas>
+          <div class="xp-hero-scrim"></div>
+        </div>
+        <div class="xp-hero-copy wrap">
+          <img class="hero-logo-mark xp-anim" style="--i:0" src="images/img-02-bf96bbd8b9.png" alt="M Perfumerie">
+          <p class="hero-script xp-anim" style="--i:1">Perfumes de</p>
+          <h1 class="hero-title-stack xp-anim" style="--i:2">
+            <span class="hts-line">Diseñador</span>
+            <span class="hts-line">Nicho</span>
+            <span class="hts-line">Árabes</span>
+          </h1>
+          <div class="hero-divider xp-anim" style="--i:3"></div>
+          <p class="hero-kicker xp-anim" style="--i:4">Perfumería importada en Rosario</p>
+          <p class="hero-desc xp-anim" style="--i:5">Elegís el producto en la página y coordinás por WhatsApp el pago y el envío.</p>
+          <div class="xp-ctas xp-anim" style="--i:6">
+            <a class="btn-gold hero-cta" href="#todos-productos" data-open="section:todos-productos">Ver catálogo <span class="hc-arrow">→</span></a>
+          </div>
         </div>
       </div>
-    </div>
-    <!-- las publicidades (flyers) se cargan desde el admin: Firestore productos/_flyers -->
+    <!-- después se agregan acá los flyers cargados desde el admin (Firestore productos/_flyers) -->
   </div>
-  <button type="button" class="hero-arrow hero-arrow-prev hidden" id="heroPrev" aria-label="Publicidad anterior">
-    <svg viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="#faf8f5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-  </button>
-  <button type="button" class="hero-arrow hero-arrow-next" id="heroNext" aria-label="Siguiente publicidad">
-    <svg viewBox="0 0 24 24" fill="none"><path d="M9 5l7 7-7 7" stroke="#faf8f5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-  </button>
-  <div class="hero-dots" id="heroDots"></div>
+  <!-- flechas y puntitos como en la portada original: flechas a los costados, puntitos abajo al centro -->
+  <button type="button" class="xp-arrow xp-arrow-prev" id="xpPrev" aria-label="Publicidad anterior"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  <button type="button" class="xp-arrow xp-arrow-next" id="xpNext" aria-label="Siguiente publicidad"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  <div class="xp-dots" id="xpDots"></div>
+  <p class="xp-sr" id="xpLive" aria-live="polite"></p>
 </section>
 
 <section class="quick-cats home-flow">
@@ -1261,9 +1342,9 @@
 <section class="gender-cats home-flow" aria-label="Perfumes por género">
   <div class="wrap">
     <div class="gender-grid">
-      <a href="#todos-productos" class="gender-card" data-open="genero:Mujer"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M12 2.6c-3.3 0-5.4 2.7-5.2 6.8.1 3.1-.6 5.5-2.1 7.4 1.6.9 3.5 1.2 5.3.9h4c1.8.3 3.7 0 5.3-.9-1.5-1.9-2.2-4.3-2.1-7.4.2-4.1-1.9-6.8-5.2-6.8zM12.2 6.3c-.9 1.4-2.5 2.5-4.1 2.8l-.1 1.1c0 2.6 1.8 4.7 4 4.7s4-2.1 4-4.7c0-1.5-.5-2.8-1.4-3.6-.8.2-1.7 0-2.4-.3z"/><path d="M4.6 22c.5-2.6 2.4-4.1 4.9-4.6.9.6 1.9.9 2.5.9s1.6-.3 2.5-.9c2.5.5 4.4 2 4.9 4.6z"/></svg><span class="gc-label">Femeninos</span></a>
-      <a href="#todos-productos" class="gender-card" data-open="genero:Hombre"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M12 2.6c-3.1 0-5 2.1-4.9 5.5l.1 2.6c.1 2.9 2.1 5.1 4.8 5.1s4.7-2.2 4.8-5.1l.1-2.6c.1-3.4-1.8-5.5-4.9-5.5zM8.15 10.2c0-1.6.4-2.6 1.1-3.1 1.7.4 3.8-.1 5.3-1.4.9.8 1.3 2.1 1.3 3.6v1c0 2.4-1.7 4.3-3.85 4.3S8.15 12.7 8.15 10.2z"/><path d="M4.6 22c.4-2.8 2.4-4.4 5-4.9l2.4 1.5 2.4-1.5c2.6.5 4.6 2.1 5 4.9z"/></svg><span class="gc-label">Masculinos</span></a>
-      <a href="#todos-productos" class="gender-card" data-open="genero:Unisex"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="11.5" r="4.6"/><path d="M13.3 8.2 19.5 2M15 2h4.5v4.5M10 16.1V22.5M7.4 19.6h5.2"/></svg><span class="gc-label">Unisex</span></a>
+      <a href="#todos-productos" class="gender-card" data-open="genero:Mujer"><svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M25 37C24.2 34 23.8 31 23.9 28C25.4 28.3 27.4 28.4 28.6 27.4C29.4 26.7 29.6 25.9 29.5 25.1C30.4 24.9 30.7 24.2 30.2 23.7C30.9 23.4 31 22.7 30.4 22.3C30.9 22 31.1 21.5 30.9 21.1C32.2 21 33 20.6 32.8 19.9C31.6 18.2 30.3 16.3 29.9 14.6C29.7 13.7 29.9 13 30 12.5C30.2 8.6 26.8 5.6 21.8 5.6C15.4 5.6 11.6 10.4 12 16.6C12.4 22 15 24.6 14.4 29C14 32 12 34.4 9 36.4C8 37 7 36.8 6.6 36M18 8.6C14.6 12.4 14.8 17.6 16.9 21.6C18.3 24.4 18.1 27.6 16.2 30.6M13.4 8.6C9.8 12.6 9.4 18.2 11 22.8C12.1 26 11.8 29.6 9.9 32.6"/></svg><span class="gc-label">Femeninos</span></a>
+      <a href="#todos-productos" class="gender-card" data-open="genero:Hombre"><svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M24.4 37C23.8 34.5 23.6 32 23.7 29.2C25.4 29.5 27.6 29.5 28.9 28.7C29.8 28.1 30 27.1 29.9 26C30.8 25.8 31.1 25.1 30.6 24.6C31.3 24.3 31.4 23.6 30.8 23.2C31.3 22.9 31.5 22.4 31.3 22C32.7 21.9 33.5 21.4 33.2 20.7C32 19 30.8 17.3 30.4 15.6C30.2 14.6 30.6 13.8 30.5 13C30.5 12 30.2 11.2 29.7 10.5C30.7 9.9 30.8 9.1 30.2 8.3C28.3 5.9 25.1 5 21.6 5.2C15.8 5.6 12.6 9.6 12.8 14.8C12.9 18.4 14.4 20.6 15.6 22.4C16.4 23.8 16.6 25.4 16.2 27.4L15.6 30.5M14.2 12.6C15.4 9.6 18.4 7.8 22.2 7.9"/></svg><span class="gc-label">Masculinos</span></a>
+      <a href="#todos-productos" class="gender-card" data-open="genero:Unisex"><span class="gc-label">Unisex</span></a>
     </div>
   </div>
 </section>
@@ -1797,10 +1878,16 @@
   // ---------- FLYERS DEL INICIO (se administran desde admin.html) ----------
   (function loadHeroFlyers(){
     const esc = t => String(t || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    db.collection('productos').doc('_flyers').get().then(doc => {
-      const track = document.getElementById('heroSlides');
-      if(!track || !doc.exists) return;
+    const getFlyers = () => db.collection('productos').doc('_flyers').get().catch(() => new Promise(r => setTimeout(r, 1200)).then(() => db.collection('productos').doc('_flyers').get()));
+    getFlyers().then(doc => {
+      window.__mpFlyersReady = true;
+      if(!doc.exists) return;
       const lista = (doc.data().lista || []).filter(f => f && f.pc && f.mobile && f.activo !== false);
+      // EXPERIMENTAL: el carrusel nuevo (experience.js) escucha este evento
+      window.__mpFlyers = lista;
+      window.dispatchEvent(new CustomEvent('mp:flyers', { detail: lista }));
+      const track = document.getElementById('heroSlides');
+      if(!track) return;
       track.querySelectorAll('.hero-ad-slide').forEach(el => el.remove());
       track.insertAdjacentHTML('beforeend', lista.map(f => {
         const titulo = f.titulo || f.marca || 'Publicidad';
@@ -1812,7 +1899,7 @@
     </button>`;
       }).join(''));
       if(window.heroRebuild) window.heroRebuild();
-    }).catch(err => console.warn('No se pudieron cargar los flyers', err));
+    }).catch(err => { window.__mpFlyersReady = true; console.warn('No se pudieron cargar los flyers', err); });
   })();
 
   let ofertas = [];
@@ -1861,7 +1948,13 @@
 
   (async function initSitio(){
   try {
-  const snap = await db.collection('productos').orderBy('orden','asc').get();
+  // si falla la conexión, se reintenta (mientras el logo sigue cargando)
+  const snap = await (async () => {
+    for(let intento = 1; ; intento++){
+      try { return await db.collection('productos').orderBy('orden','asc').get(); }
+      catch(e){ if(intento >= 3) throw e; await new Promise(r => setTimeout(r, 900 * intento)); }
+    }
+  })();
   snap.forEach(doc => {
     const p = normalizeProducto(Object.assign({id: doc.id}, doc.data()));
     todosProductos.push(p);
@@ -1885,6 +1978,27 @@
     const heroBrandAliases = {
       'emporio armani': ['emporio armani', 'armani']
     };
+    // EXPERIMENTAL: abre la página de una marca (lo usan los flyers del carrusel nuevo)
+    // flyers cuya foto no dice el modelo: perfumes que aparecen en la foto (por la silueta), en el orden en que se ven
+    const FLYER_DESTACADOS = {
+      'mugz5lkp': ['McDXOpa34i0nbusZH4NL', '8m7QA05vpeISEpbneRVo', 'shakira-amarillo-edp'] // Shakira: Rojo, Fucsia, Amarillo
+    };
+    window.mpOpenBrand = function(brandHint, flyer){
+      brandHint = (brandHint || '').trim();
+      if(!brandHint) return;
+      const target = brandHint.toLowerCase();
+      const aliases = heroBrandAliases[target] || [target];
+      const existing = Object.values(allProducts).find(p => aliases.includes((p.brand || '').toLowerCase()));
+      // prioridad: los perfumes de la publicidad van primero al entrar desde el flyer
+      let prio = null;
+      if(flyer){
+        const modelo = (flyer.modelo != null ? flyer.modelo : modeloDesdeTitulo(flyer.titulo, brandHint)) || '';
+        const ids = flyer.destacados || FLYER_DESTACADOS[flyer.id] || [];
+        if(modelo || ids.length) prio = { modelo: modelo, marca: brandHint, ids: ids };
+      }
+      openStandaloneSection('marcas');
+      showBrandResults(existing ? existing.brand : brandHint, aliases, true, prio);
+    };
     const heroTrack = document.getElementById('heroSlides');
     if(heroTrack) heroTrack.addEventListener('click', (e) => {
       const slide = e.target.closest('.hero-ad-slide');
@@ -1905,13 +2019,7 @@
 
   // plantilla compartida de tarjeta (se usa en ofertas, nuevos ingresos y resultados por marca)
   function hotBadgeHtml(modal){
-    return `<svg class="hot-badge${modal ? ' hot-badge-modal' : ''}" title="Tendencia" viewBox="0 0 28 30" xmlns="http://www.w3.org/2000/svg">
-      <path class="flame-lick-l" d="M4 6C2.2 8.3 1.6 10.3 1.9 12C2.1 13.4 3.1 14.1 4 13.6C4.7 13.2 4.9 11.9 4.5 10.5C4.1 9.2 4 7.6 4 6Z"/>
-      <path class="flame-lick-r" d="M24 5C25.8 7.3 26.4 9.3 26.1 11C25.9 12.4 24.9 13.1 24 12.6C23.3 12.2 23.1 10.9 23.5 9.5C23.9 8.2 24 6.6 24 5Z"/>
-      <path class="flame-outer" d="M14 3C9 9 6.5 14 6.5 19C6.5 24.5 9.8 28 14 28C18.2 28 21.5 24.5 21.5 19C21.5 14 19 9 14 3Z"/>
-      <path class="flame-inner" d="M14 9C10.7 13 9 16.5 9 20C9 23.5 11.2 26 14 26C16.8 26 19 23.5 19 20C19 16.5 17.3 13 14 9Z"/>
-      <path class="flame-core" d="M14 15C12 17.3 11 19.3 11 21.3C11 23.3 12.3 24.6 14 24.6C15.7 24.6 17 23.3 17 21.3C17 19.3 16 17.3 14 15Z"/>
-    </svg>`;
+    return `<svg class="hot-badge hot-badge-v3${modal ? ' hot-badge-modal' : ''}" viewBox="0 0 28 30" xmlns="http://www.w3.org/2000/svg" aria-label="Tendencia" role="img"><path class="flame-lick flame-lick-l" d="M4 6C2.2 8.3 1.6 10.3 1.9 12C2.1 13.4 3.1 14.1 4 13.6C4.7 13.2 4.9 11.9 4.5 10.5C4.1 9.2 4 7.6 4 6Z"/><path class="flame-lick flame-lick-r" d="M24 5C25.8 7.3 26.4 9.3 26.1 11C25.9 12.4 24.9 13.1 24 12.6C23.3 12.2 23.1 10.9 23.5 9.5C23.9 8.2 24 6.6 24 5Z"/><path class="flame-lick flame-fly flame-fly-l" d="M4 6C2.2 8.3 1.6 10.3 1.9 12C2.1 13.4 3.1 14.1 4 13.6C4.7 13.2 4.9 11.9 4.5 10.5C4.1 9.2 4 7.6 4 6Z"/><path class="flame-lick flame-fly flame-fly-r" d="M24 5C25.8 7.3 26.4 9.3 26.1 11C25.9 12.4 24.9 13.1 24 12.6C23.3 12.2 23.1 10.9 23.5 9.5C23.9 8.2 24 6.6 24 5Z"/><path class="flame-outer" d="M14 3C9 9 6.5 14 6.5 19C6.5 24.5 9.8 28 14 28C18.2 28 21.5 24.5 21.5 19C21.5 14 19 9 14 3Z"><animate attributeName="d" dur="3.2s" begin="0s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.25;0.5;0.75;1" keySplines=".45 0 .55 1;.45 0 .55 1;.45 0 .55 1;.45 0 .55 1" values="M14 3C9 9 6.5 14 6.5 19C6.5 24.5 9.8 28 14 28C18.2 28 21.5 24.5 21.5 19C21.5 14 19 9 14 3Z;M13.7 2.6C8.9 8.8 6.5 13.9 6.5 19C6.5 24.5 9.8 28 14 28C18.2 28 21.5 24.5 21.5 19.1C21.5 14.1 18.8 8.9 13.7 2.6Z;M14 3C9 9 6.5 14 6.5 19C6.5 24.5 9.8 28 14 28C18.2 28 21.5 24.5 21.5 19C21.5 14 19 9 14 3Z;M14.3 3.2C9.2 9.1 6.5 14.1 6.5 19C6.5 24.5 9.8 28 14 28C18.2 28 21.5 24.5 21.5 19C21.5 13.9 19.1 9.1 14.3 3.2Z;M14 3C9 9 6.5 14 6.5 19C6.5 24.5 9.8 28 14 28C18.2 28 21.5 24.5 21.5 19C21.5 14 19 9 14 3Z"/></path><path class="flame-inner" d="M14 9C10.7 13 9 16.5 9 20C9 23.5 11.2 26 14 26C16.8 26 19 23.5 19 20C19 16.5 17.3 13 14 9Z"><animate attributeName="d" dur="2.6s" begin="-.7s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.25;0.5;0.75;1" keySplines=".45 0 .55 1;.45 0 .55 1;.45 0 .55 1;.45 0 .55 1" values="M14 9C10.7 13 9 16.5 9 20C9 23.5 11.2 26 14 26C16.8 26 19 23.5 19 20C19 16.5 17.3 13 14 9Z;M14.4 9.3C11 13.1 9.1 16.6 9.1 20C9.1 23.5 11.2 26 14 26C16.8 26 19 23.5 19 20C19 16.4 17.4 12.9 14.4 9.3Z;M14 9C10.7 13 9 16.5 9 20C9 23.5 11.2 26 14 26C16.8 26 19 23.5 19 20C19 16.5 17.3 13 14 9Z;M13.6 8.5C10.5 12.8 9 16.4 9 20C9 23.5 11.2 26 14 26C16.8 26 19 23.5 19 20.1C19 16.6 17 13 13.6 8.5Z;M14 9C10.7 13 9 16.5 9 20C9 23.5 11.2 26 14 26C16.8 26 19 23.5 19 20C19 16.5 17.3 13 14 9Z"/></path><path class="flame-core" d="M14 15C12 17.3 11 19.3 11 21.3C11 23.3 12.3 24.6 14 24.6C15.7 24.6 17 23.3 17 21.3C17 19.3 16 17.3 14 15Z"><animate attributeName="d" dur="2.1s" begin="-.4s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.25;0.5;0.75;1" keySplines=".45 0 .55 1;.45 0 .55 1;.45 0 .55 1;.45 0 .55 1" values="M14 15C12 17.3 11 19.3 11 21.3C11 23.3 12.3 24.6 14 24.6C15.7 24.6 17 23.3 17 21.3C17 19.3 16 17.3 14 15Z;M13.7 14.5C11.9 17 11 19.2 11 21.3C11 23.3 12.3 24.6 14 24.6C15.7 24.6 17 23.3 17 21.3C17 19.4 15.9 17.2 13.7 14.5Z;M14 15C12 17.3 11 19.3 11 21.3C11 23.3 12.3 24.6 14 24.6C15.7 24.6 17 23.3 17 21.3C17 19.3 16 17.3 14 15Z;M14.3 15.3C12.2 17.5 11.1 19.4 11.1 21.3C11.1 23.3 12.3 24.6 14 24.6C15.7 24.6 16.9 23.3 16.9 21.3C16.9 19.3 16.2 17.4 14.3 15.3Z;M14 15C12 17.3 11 19.3 11 21.3C11 23.3 12.3 24.6 14 24.6C15.7 24.6 17 23.3 17 21.3C17 19.3 16 17.3 14 15Z"/></path></svg>`;
   }
 
   function cardHtml(b){
@@ -2210,7 +2318,7 @@
     }
     if(view.type === 'brand-results') {
       openStandaloneSection('marcas', false);
-      showBrandResults(view.brand, null, false);
+      showBrandResults(view.brand, null, false, view.prio || null);
       return;
     }
     if(view.type === 'product') { openProductModal(view.id, false); return; }
@@ -2456,12 +2564,42 @@
     if(!a || !b) return false;
     return a === b || a.includes(b) || b.includes(a);
   }
-  function showBrandResults(brandKey, aliases, addHistory=true){
-    if(addHistory) saveViewInHistory({type:'brand-results',brand:brandKey});
+  // ---- orden "primero lo de la publicidad" (al entrar a una marca desde un flyer) ----
+  function normTxt(s){ return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
+  const CONCENTRACION = /\b(eau de parfum|eau de toilette|eau de cologne|edp|edt|edc|parfum|perfume|perfumes|extrait|\d+ ?ml)\b/g;
+  function modeloKey(nombre, marcas){
+    let s = ' ' + normTxt(nombre) + ' ';
+    marcas.forEach(m => normTxt(m).split(' ').forEach(w => { if(w) s = s.split(' ' + w + ' ').join(' '); }));
+    return s.replace(CONCENTRACION, ' ').replace(/\s+/g, ' ').trim();
+  }
+  // "Emporio Armani Stronger With You Intensely" -> "Stronger With You Intensely"
+  function modeloDesdeTitulo(titulo, marca){ return modeloKey(titulo, [marca, 'emporio armani']); }
+  function prioridadFlyer(p, prio){
+    if(!prio) return 0;
+    const pos = (prio.ids || []).indexOf(p.id);
+    if(pos >= 0) return 10000 - pos;                       // elegido a mano (por la silueta de la foto)
+    const m = modeloKey(prio.modelo, [prio.marca, 'emporio armani']);
+    if(!m) return 0;
+    const k = modeloKey(p.name, [p.brand, prio.marca, 'emporio armani']);
+    if(k === m) return 1000;                               // nombre exacto del perfume de la publicidad
+    const t = m.split(' ');
+    for(let n = t.length; n >= 1; n--){                    // misma línea: comparte el principio del nombre
+      const frase = t.slice(0, n).join(' ');
+      if(n === 1 && frase.length < 4) break;
+      if((' ' + k + ' ').includes(' ' + frase + ' ')){
+        return 100 + n * 10 + (k.indexOf(frase) === 0 ? 5 : 0) - Math.min(k.split(' ').length, 9) * .1;
+      }
+    }
+    return 0;
+  }
+  function showBrandResults(brandKey, aliases, addHistory=true, prio=null){
+    if(addHistory) saveViewInHistory({type:'brand-results',brand:brandKey,prio:prio});
     const items = aliases
       ? Object.values(allProducts).filter(p => aliases.some(al => brandMatches(p.brand, al)))
       : Object.values(allProducts).filter(p => brandMatches(p.brand, brandKey));
-    items.sort((a, b) => (a.stock === false ? 1 : 0) - (b.stock === false ? 1 : 0));
+    const orden = items.slice();
+    const sc = {}; items.forEach(p => { sc[p.id] = prioridadFlyer(p, prio); });
+    items.sort((a, b) => (sc[b.id] - sc[a.id]) || ((a.stock === false ? 1 : 0) - (b.stock === false ? 1 : 0)) || (orden.indexOf(a) - orden.indexOf(b)));
     document.getElementById('brandListWrap').style.display = 'none';
     const resultsEl = document.getElementById('brandResults');
     resultsEl.style.display = 'block';
@@ -2917,7 +3055,9 @@
   document.getElementById('cartOverlay').addEventListener('click', closeCart);
 
   updateCartUI();
+  window.__mpDataReady = true;
   } catch(err) {
+    window.__mpDataReady = true; // no se traba el inicio aunque falle
     console.error('Error inicializando la tienda (productos):', err);
   }
   })();
