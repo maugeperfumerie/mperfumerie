@@ -34,47 +34,14 @@
   }
   function initIntro(){
     var el = doc.getElementById('xpIntro');
-    var hidden = !el || root.classList.contains('xp-no-intro') || reduceMotion || getComputedStyle(el).display === 'none';
-    if(hidden){ finishIntro(); return; }
+    // la barra de carga del logo la maneja el script que está dentro del index (arranca antes que este archivo)
+    if(!el || window.__xpIntroFinished || reduceMotion || getComputedStyle(el).display === 'none'){ finishIntro(); return; }
+    window.addEventListener('xp:introdone', finishIntro);
+    window.__xpIntroSkip = function(){ introListeners.splice(0).forEach(function(fn){ fn(); }); skipIntro(); };
+    if(el.classList.contains('is-complete')) window.__xpIntroSkip();
     el.addEventListener('animationend', function(e){ if(e.target === el && el.classList.contains('is-leaving')) finishIntro(); });
     el.addEventListener('click', skipIntro);
     doc.addEventListener('keydown', onIntroKey);
-    // --- la M funciona como barra de carga: avanza con las imágenes de la página que ya cargaron
-    var mark = doc.getElementById('xpMark');
-    var pieces = ['.xp-m-left', '.xp-m-mid', '.xp-m-right', '.xp-m-gem'].map(function(s){ return el.querySelector(s); });
-    var t0 = performance.now(), MIN = 450, MAX = 5800, shown = 0, loaded = false;
-    window.addEventListener('load', function(){ loaded = true; });
-    function realProgress(){
-      var imgs = Array.prototype.filter.call(doc.images, function(i){ return i.loading !== 'lazy' && !el.contains(i); });
-      var ok = imgs.filter(function(i){ return i.complete; }).length;
-      var p = imgs.length ? ok / imgs.length : 1;
-      if(loaded) p = Math.max(p, .95);
-      // además: página actualizada + productos + flyers cargados (cada uno suma a la barra)
-      var checks = [window.__mpVersionOK, window.__mpDataReady, window.__mpFlyersReady];
-      var done = checks.filter(Boolean).length;
-      return Math.min(1, p * .4 + (done / checks.length) * .6, done === checks.length ? 1 : .96);
-    }
-    function tick(now){
-      if(!doc.getElementById('xpIntro')) return;
-      var t = now - t0;
-      var target = Math.min(realProgress(), t / MIN);   // nunca más rápido que el mínimo (se ve prolijo)
-      if(t > MAX) target = 1;                             // tope: con internet lento, entra igual a los ~6 s
-      shown += (target - shown) * .3; if(target - shown < .01) shown = target;
-      // 3 barritas: 0-30%, 30-60%, 60-90%; el diamante aparece en el último tramo
-      var ranges = [[0, .3], [.3, .6], [.6, .9], [.9, 1]];
-      pieces.forEach(function(pc, i){ var r = ranges[i]; var f = Math.max(0, Math.min(1, (shown - r[0]) / (r[1] - r[0]))); if(pc) pc.style.setProperty('--f', f.toFixed(3)); });
-      if(mark) mark.setAttribute('aria-valuenow', Math.round(shown * 100));
-      if(shown >= 1){
-        el.classList.add('is-complete');
-        setTimeout(function(){
-          introListeners.splice(0).forEach(function(fn){ fn(); }); // el contenido empieza a entrar mientras se desvanece
-          skipIntro();
-        }, 220);
-        return;
-      }
-      requestAnimationFrame(tick);
-    }
-    requestAnimationFrame(tick);
     setTimeout(finishIntro, 8000); // red de seguridad
   }
 
