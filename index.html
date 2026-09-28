@@ -1138,8 +1138,10 @@
   .pm-slide.studio img{ object-fit:contain; mix-blend-mode:multiply; }
   .pm-slide img.pm-img-loading{ opacity:0; }
   .pm-slide img.pm-img-hidden{ opacity:0 !important; transition:none !important; }
-  .pm-counter{ position:absolute; top:24px; left:26px; z-index:3; font-family:var(--display); font-size:11px; font-weight:600; letter-spacing:.14em; color:rgba(10,9,8,.45); font-variant-numeric:tabular-nums; }
-  .pm-image:has(#pmHotBadge svg) .pm-counter{ left:60px; }
+  /* rayitas debajo de las miniaturas: una por foto, la actual más larga y oscura */
+  .pm-counter{ position:absolute; left:0; right:0; bottom:14px; z-index:3; display:flex; justify-content:center; gap:6px; pointer-events:none; }
+  .pm-counter span{ width:14px; height:2px; border-radius:2px; background:rgba(10,9,8,.18); transition:width .45s cubic-bezier(.2,.8,.2,1), background .3s ease; }
+  .pm-counter span.on{ width:26px; background:var(--black); }
 
   .pm-arrow{
     top:44%; width:40px; height:40px; background:rgba(255,255,255,.78); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
@@ -1150,7 +1152,7 @@
   .pm-arrow.is-off{ opacity:0 !important; pointer-events:none; }
   .pm-arrow-prev{ left:16px; } .pm-arrow-next{ right:16px; }
 
-  .pm-thumbs{ position:absolute; left:0; right:0; bottom:20px; z-index:3; padding:0 20px; gap:8px; justify-content:center; flex-wrap:nowrap; }
+  .pm-thumbs{ position:absolute; left:0; right:0; bottom:30px; z-index:3; padding:0 20px; gap:8px; justify-content:center; flex-wrap:nowrap; }
   .pm-thumb{ width:48px; height:48px; padding:5px; border-radius:12px; background:#fff; border:1px solid rgba(10,9,8,.08); transition:transform .25s ease, box-shadow .25s ease; }
   .pm-thumb.active{ border-color:rgba(10,9,8,.08); box-shadow:0 0 0 1.5px var(--black); }
   .pm-thumb:active{ transform:scale(.92); }
@@ -1272,10 +1274,9 @@
     .pm-slide.studio img, .pm-frame{ left:12%; top:11%; width:76%; height:66%; }
     .pm-gallery::after{ bottom:19%; }
     .pm-arrow{ display:none !important; }
-    .pm-thumbs{ bottom:14px; }
+    .pm-thumbs{ bottom:22px; }
     .pm-thumb{ width:42px; height:42px; border-radius:10px; padding:4px; }
-    .pm-counter{ top:22px; left:20px; }
-    .pm-image:has(#pmHotBadge svg) .pm-counter{ left:54px; }
+    .pm-counter{ bottom:10px; }
     .hot-badge.hot-badge-modal{ top:18px; left:18px; }
     .pm-close{ top:14px; right:14px; width:36px; height:36px; padding:11px; }
     .pm-info{ height:auto; overflow:visible; padding:24px 20px 0; }
@@ -1313,7 +1314,7 @@
 <script>
   /* Versión de la página: si el navegador tiene guardada una versión vieja, se recarga sola (una vez) mientras se ve el logo.
      Al subir cambios, se sube también version.json con el mismo número que MP_BUILD. */
-  window.MP_BUILD = '2026-09-28d';
+  window.MP_BUILD = '2026-09-28e';
   window.__mpVersionOK = false;
   (function(){
     function ok(){ window.__mpVersionOK = true; }
@@ -1333,8 +1334,8 @@
     }catch(e){ ok(); }
   })();
 </script>
-<link rel="stylesheet" href="experience/experience.css?v=2026-09-28d">
-<script src="experience/experience.js?v=2026-09-28d" defer></script>
+<link rel="stylesheet" href="experience/experience.css?v=2026-09-28e">
+<script src="experience/experience.js?v=2026-09-28e" defer></script>
 </head>
 <body>
 <!-- Intro de marca: la M se carga y entra sola (no se puede saltear) -->
@@ -2952,7 +2953,9 @@
     tr.style.transform = `translateX(${-pmImageIndex * 100}%)`;
     document.querySelectorAll('.pm-thumb').forEach((b, idx) => b.classList.toggle('active', idx === pmImageIndex));
     const n = pmImages.length;
-    document.getElementById('pmCounter').textContent = n > 1 ? `${String(pmImageIndex + 1).padStart(2, '0')} / ${String(n).padStart(2, '0')}` : '';
+    const dots = document.getElementById('pmCounter');
+    if(dots.children.length !== (n > 1 ? n : 0)) dots.innerHTML = n > 1 ? '<span></span>'.repeat(n) : '';
+    Array.prototype.forEach.call(dots.children, (d, k) => d.classList.toggle('on', k === pmImageIndex));
     document.getElementById('pmArrowPrev').classList.toggle('is-off', pmImageIndex === 0);
     document.getElementById('pmArrowNext').classList.toggle('is-off', pmImageIndex === n - 1);
   }
@@ -3205,7 +3208,7 @@
     const dragged = panel.style.transform;
     pmClearFly();
     const pr = panel.getBoundingClientRect();
-    const to = (!pmReduce() && src && pmImg && pmImageIndex === 0 && !dragged && panel.scrollTop < 40) ? pmSrcRect(src) : null;
+    const to = null;   // al cerrar, la ficha se va directo (el "vuelo" del perfume es solo al abrir)
     const ar = to ? src.naturalWidth / src.naturalHeight : 1;
     const big = to ? pmStageRect(ar) : null;
     pmUnlockScroll();                      // la página vuelve a su lugar (no se mueve nada a la vista)
@@ -3221,8 +3224,8 @@
     if(!to){
       const a = panel.animate([
         { opacity: 1, transform: dragged || 'none' },
-        { opacity: pmIsMobile() ? 1 : 0, transform: pmIsMobile() ? 'translateY(100%)' : 'translateY(16px) scale(.97)' }
-      ], { duration: pmIsMobile() ? 380 : 300, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'forwards' });
+        { opacity: pmIsMobile() ? 1 : 0, transform: pmIsMobile() ? 'translateY(100%)' : 'translateY(14px) scale(.975)' }
+      ], { duration: pmIsMobile() ? 360 : 260, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'forwards' });
       a.onfinish = finish;
       return;
     }
