@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>M Perfumerie — Maison Parfum</title>
 <link rel="icon" type="image/png" href="images/img-01-1b60c24048.png">
 <meta property="og:title" content="M Perfumerie — Perfumes importados">
@@ -1089,6 +1089,205 @@
     .quick-card span{ font-size:10px; letter-spacing:0.02em; }
   }
 
+  /* ---------- SIN ZOOM EN CELULAR (pellizcar / doble toque) ---------- */
+  html, body{ touch-action:pan-x pan-y; -webkit-text-size-adjust:100%; text-size-adjust:100%; }
+  a, button, .prod-card{ -webkit-tap-highlight-color:transparent; }
+
+  /* ==========================================================================
+     FICHA DE PRODUCTO (rediseño 2): tamaño fijo para todos los perfumes y fotos.
+     El perfume sale de la miniatura recortado (sin fondo) y el recuadro se arma alrededor.
+     ========================================================================== */
+  .product-modal{ opacity:1; visibility:hidden; transition:none; padding:24px; }
+  .product-modal.open{ opacity:1; visibility:visible; transition:none; }
+  .product-modal.pm-closing{ pointer-events:none; }
+  .pm-overlay{
+    background:rgba(234,228,219,.74); -webkit-backdrop-filter:blur(18px) saturate(1.15); backdrop-filter:blur(18px) saturate(1.15);
+    opacity:0; transition:opacity .45s cubic-bezier(.2,.8,.2,1);
+  }
+  .product-modal.open .pm-overlay{ opacity:1; }
+  .product-modal.pm-closing .pm-overlay{ opacity:0; transition-duration:.42s; }
+
+  .pm-panel{
+    width:min(1060px, calc(100vw - 48px)); height:min(640px, calc(100vh - 48px)); max-width:none; max-height:none;
+    display:grid; grid-template-columns:1.08fr 1fr; overflow:hidden; border-radius:28px; background:#fff;
+    transform:none; transition:none; opacity:1;
+    box-shadow:0 60px 120px -50px rgba(40,30,20,.5), 0 0 0 1px rgba(10,9,8,.05);
+  }
+  .product-modal.open .pm-panel{ transform:none; }
+  .pm-grabber{ display:none; }
+
+  /* escenario de las fotos */
+  .pm-gallery{ position:relative; min-height:0; height:100%; overflow:hidden; background:radial-gradient(115% 85% at 50% 38%, #fefdfb 0%, #f6f2ec 55%, #ede7de 100%); }
+  .pm-gallery::after{
+    content:""; position:absolute; left:18%; right:18%; bottom:15.5%; height:22px; border-radius:50%; pointer-events:none;
+    background:radial-gradient(closest-side, rgba(60,45,30,.16), transparent); opacity:0; transition:opacity .5s ease .2s;
+  }
+  .product-modal.pm-shown .pm-gallery::after{ opacity:1; }
+  .pm-image{ position:absolute; inset:0; padding:0; display:block; overflow:hidden; flex:none; height:auto; min-height:0; max-height:none; touch-action:pan-y; user-select:none; -webkit-user-select:none; cursor:grab; }
+  .pm-image:active{ cursor:grabbing; }
+  .pm-track{ position:absolute; inset:0; display:flex; will-change:transform; }
+  .pm-slide{ position:relative; flex:0 0 100%; height:100%; overflow:hidden; }
+  /* el fondo va en cada foto de estudio: así el blanco de la foto se funde con el escenario */
+  .pm-slide.studio{ background:radial-gradient(115% 85% at 50% 38%, #fefdfb 0%, #f6f2ec 55%, #ede7de 100%); }
+  .pm-image img, .pm-slide img{
+    position:absolute; left:0; top:0; width:100%; height:100%; object-fit:cover; opacity:1; pointer-events:none;
+    transition:opacity .35s ease;
+  }
+  .pm-frame{ position:absolute; pointer-events:none; }
+  .pm-slide.studio img, .pm-frame{ left:11%; top:8%; width:78%; height:72%; }
+  .pm-slide.studio img{ object-fit:contain; mix-blend-mode:multiply; }
+  .pm-slide img.pm-img-loading{ opacity:0; }
+  .pm-slide img.pm-img-hidden{ opacity:0 !important; transition:none !important; }
+  .pm-counter{ position:absolute; top:24px; left:26px; z-index:3; font-family:var(--display); font-size:11px; font-weight:600; letter-spacing:.14em; color:rgba(10,9,8,.45); font-variant-numeric:tabular-nums; }
+  .pm-image:has(#pmHotBadge svg) .pm-counter{ left:60px; }
+
+  .pm-arrow{
+    top:44%; width:40px; height:40px; background:rgba(255,255,255,.78); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+    border:1px solid rgba(10,9,8,.07); box-shadow:none; transition:opacity .25s ease, transform .2s ease, background .2s ease;
+  }
+  .pm-arrow:hover{ background:#fff; }
+  .pm-arrow:active{ transform:translateY(-50%) scale(.92); }
+  .pm-arrow.is-off{ opacity:0 !important; pointer-events:none; }
+  .pm-arrow-prev{ left:16px; } .pm-arrow-next{ right:16px; }
+
+  .pm-thumbs{ position:absolute; left:0; right:0; bottom:20px; z-index:3; padding:0 20px; gap:8px; justify-content:center; flex-wrap:nowrap; }
+  .pm-thumb{ width:48px; height:48px; padding:5px; border-radius:12px; background:#fff; border:1px solid rgba(10,9,8,.08); transition:transform .25s ease, box-shadow .25s ease; }
+  .pm-thumb.active{ border-color:rgba(10,9,8,.08); box-shadow:0 0 0 1.5px var(--black); }
+  .pm-thumb:active{ transform:scale(.92); }
+  .hot-badge.hot-badge-modal{ top:20px; left:22px; z-index:3; }
+
+  .pm-close{
+    top:16px; right:16px; z-index:8; width:40px; height:40px; padding:12px; border-radius:50%;
+    background:rgba(255,255,255,.86); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+    border:1px solid rgba(10,9,8,.08); transition:opacity .3s ease, transform .2s ease;
+  }
+  .pm-close:active{ transform:scale(.9); }
+  .pm-close svg line{ stroke:#0a0908; stroke-width:1.8; }
+
+  /* información */
+  .pm-info{ padding:50px 44px 0; overflow-y:auto; min-height:0; height:100%; display:flex; flex-direction:column; position:relative; overscroll-behavior:contain; }
+  .pm-meta-row{ gap:4px; }
+  .pm-meta-row span{ font-size:10.5px; font-weight:700; letter-spacing:.2em; text-transform:uppercase; color:rgba(10,9,8,.45); }
+  #pmBrand.clickable{ text-underline-offset:3px; }
+  #pmBrand.clickable:hover{ text-decoration:underline; }
+  .pm-info h3{ font-size:30px; line-height:1.08; letter-spacing:-.01em; margin:12px 0 6px; text-wrap:balance; }
+  .pm-sub{ font-size:13px; color:rgba(10,9,8,.45); margin-bottom:22px; min-height:1px; }
+  .pm-size-wrap{ display:flex; align-items:center; gap:12px; margin-bottom:22px; min-width:0; }
+  .pm-size-label{ font-size:10.5px; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:rgba(10,9,8,.45); flex-shrink:0; }
+  .pm-seg{
+    position:relative; display:inline-flex; flex-wrap:nowrap; gap:2px; padding:3px; margin:0; border-radius:999px; border:1px solid rgba(10,9,8,.09);
+    max-width:100%; overflow-x:auto; scrollbar-width:none;
+  }
+  .pm-seg::-webkit-scrollbar{ display:none; }
+  .pm-seg-ind{ position:absolute; top:3px; bottom:3px; left:0; width:0; border-radius:999px; background:var(--black); transition:transform .45s cubic-bezier(.2,.8,.2,1), width .45s cubic-bezier(.2,.8,.2,1); }
+  .pm-seg .pm-size-chip, .pm-seg button.pm-size-chip{
+    position:relative; z-index:1; background:transparent; border:0; color:rgba(10,9,8,.5); padding:9px 16px; font-size:12px; font-weight:700; white-space:nowrap; transition:color .3s ease;
+  }
+  .pm-seg button.pm-size-chip:hover{ background:transparent; color:var(--black); }
+  .pm-seg button.pm-size-chip.active{ background:transparent; color:#fff; }
+  .pm-seg.is-single .pm-size-chip{ cursor:default; }
+  .pm-price-row{ margin-bottom:26px; min-height:34px; align-items:baseline; }
+  .pm-price-row .price-new{ font-family:var(--display); font-size:28px; font-weight:700; letter-spacing:-.015em; font-variant-numeric:tabular-nums; }
+  .pm-tabs-row{ position:relative; gap:26px; margin-bottom:18px; border-bottom:1px solid rgba(10,9,8,.08); flex-wrap:nowrap; }
+  .pm-tab-label{ padding:0 0 12px; font-size:10.5px; font-weight:600; letter-spacing:.14em; transition:color .3s ease; }
+  .pm-tab-label.active{ font-weight:800; }
+  .pm-tab-label::after{ display:none; }
+  .pm-tab-ind{ position:absolute; bottom:-1px; left:0; width:0; height:2px; background:var(--black); transition:transform .45s cubic-bezier(.2,.8,.2,1), width .45s cubic-bezier(.2,.8,.2,1); }
+  .pm-tab-content{ position:relative; height:206px; margin-bottom:8px; }
+  .pm-tab-content > .pm-ing-list, .pm-tab-content > .pm-notas{
+    position:absolute; inset:0; height:auto; overflow-y:auto; display:block !important;
+    opacity:0; transform:translateX(14px); pointer-events:none; transition:opacity .3s ease, transform .45s cubic-bezier(.2,.8,.2,1);
+  }
+  .pm-tab-content > .pm-ing-list{ display:flex !important; flex-direction:column; }
+  .pm-tab-content > .pm-pane-on{ opacity:1; transform:none; pointer-events:auto; }
+  .ing-bar-fill{ transition:width .9s cubic-bezier(.2,.8,.2,1); }
+  .ing-name{ opacity:0; transition:opacity .4s ease .3s; }
+  .pm-ing-list.go .ing-name{ opacity:1; }
+  .pm-notes{ list-style:none; position:relative; padding-left:22px; display:flex; flex-direction:column; gap:16px; margin:2px 0 0; }
+  .pm-notes::before{ content:""; position:absolute; left:4px; top:6px; bottom:6px; width:1px; background:rgba(10,9,8,.1); }
+  .pm-notes li{ position:relative; }
+  .pm-notes li::before{ content:""; position:absolute; left:-22px; top:3px; width:9px; height:9px; border-radius:50%; background:#fff; border:1.5px solid var(--black); }
+  .pm-notes .k{ font-size:10px; font-weight:800; letter-spacing:.16em; text-transform:uppercase; color:rgba(10,9,8,.45); }
+  .pm-notes .v{ font-size:13.5px; line-height:1.5; margin-top:2px; color:var(--black); font-weight:400; }
+  #pmDescripcion .notas-value{ font-size:13.5px; line-height:1.65; color:var(--black); }
+
+  .pm-buy-row{
+    position:sticky; bottom:0; z-index:3; margin:auto -44px 0; padding:16px 44px 24px; gap:10px;
+    background:linear-gradient(to bottom, rgba(255,255,255,0), #fff 26%); border-top:1px solid rgba(10,9,8,.07);
+  }
+  .pm-qty{ height:52px; border-color:rgba(10,9,8,.12); }
+  .pm-qty-btn{ height:50px; }
+  .pm-add-btn, .pm-add-btn.add-cart-btn{
+    position:relative; height:52px; padding:0; border-radius:999px; border:none; background:var(--black); color:#fff; overflow:hidden;
+    font-size:11px; font-weight:800; letter-spacing:.16em; transition:background .25s ease, transform .15s ease;
+  }
+  .pm-add-btn:hover{ background:#2b2724; border-color:transparent; }
+  .pm-add-btn:active{ transform:scale(.98); }
+  .pm-add-btn:disabled{ background:rgba(10,9,8,.12); color:rgba(10,9,8,.45); }
+  .pm-add-main, .pm-add-ok{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:10px; transition:transform .45s cubic-bezier(.2,.8,.2,1), opacity .3s ease; }
+  .pm-add-btn svg{ width:16px; height:16px; }
+  .pm-add-ok{ transform:translateY(100%); opacity:0; }
+  .pm-add-btn.is-done .pm-add-main{ transform:translateY(-100%); opacity:0; }
+  .pm-add-btn.is-done .pm-add-ok{ transform:none; opacity:1; }
+  .pm-add-ok path{ stroke-dasharray:24; stroke-dashoffset:24; }
+  .pm-add-btn.is-done .pm-add-ok path{ animation:pmTick .5s ease .15s forwards; }
+  @keyframes pmTick{ to{ stroke-dashoffset:0; } }
+  .pm-buy-row .pm-qty-hint{ position:absolute; left:44px; bottom:100%; top:auto; margin:0 0 6px; background:var(--black); color:#fff; padding:3px 9px; border-radius:999px; }
+
+  /* el contenido aparece escalonado cuando el recuadro ya se armó */
+  .pm-info > *, .pm-thumbs, .pm-counter, .pm-close, .pm-arrow{ opacity:0; transition:opacity .45s ease, transform .6s cubic-bezier(.2,.8,.2,1); }
+  .pm-info > *:not(.pm-buy-row){ transform:translateY(12px); }
+  .product-modal.pm-shown .pm-info > *, .product-modal.pm-shown .pm-thumbs, .product-modal.pm-shown .pm-counter,
+  .product-modal.pm-shown .pm-close, .product-modal.pm-shown .pm-arrow{ opacity:1; transform:none; }
+  .product-modal.pm-shown .pm-info > :nth-child(2){ transition-delay:.03s; }
+  .product-modal.pm-shown .pm-info > :nth-child(3){ transition-delay:.06s; }
+  .product-modal.pm-shown .pm-info > :nth-child(4){ transition-delay:.09s; }
+  .product-modal.pm-shown .pm-info > :nth-child(5){ transition-delay:.12s; }
+  .product-modal.pm-shown .pm-info > :nth-child(6){ transition-delay:.15s; }
+  .product-modal.pm-shown .pm-info > :nth-child(7){ transition-delay:.18s; }
+  .product-modal.pm-shown .pm-info > :nth-child(n+8){ transition-delay:.21s; }
+  .product-modal.pm-closing .pm-info > *, .product-modal.pm-closing .pm-thumbs, .product-modal.pm-closing .pm-counter,
+  .product-modal.pm-closing .pm-close, .product-modal.pm-closing .pm-arrow{ opacity:0 !important; transition:opacity .14s ease !important; transition-delay:0s !important; }
+
+  /* la foto que "vuela" entre la miniatura y la ficha: recortada, sin el fondo blanco */
+  .pm-fly{ position:fixed; z-index:320; pointer-events:none; margin:0; object-fit:contain; background:transparent; mix-blend-mode:multiply; transform-origin:0 0; will-change:transform; }
+  .prod-img.pm-src-hidden{ visibility:hidden; }
+  html.pm-locked, html.pm-locked body{ overflow:hidden; }
+  html.pm-locked body{ position:fixed; left:0; right:0; width:100%; }
+  @media (hover:none){ .prod-card:hover{ transform:none; } }
+  .prod-card{ -webkit-touch-callout:none; }
+
+  @media (max-width:680px){
+    .product-modal{ align-items:flex-end; padding:0; }
+    .pm-panel{
+      display:block; width:100%; height:calc(100vh - 16px); overflow-y:auto; overflow-x:hidden;
+      border-radius:28px 28px 0 0; -webkit-overflow-scrolling:touch; overscroll-behavior:contain;
+      box-shadow:0 -20px 60px -30px rgba(40,30,20,.45);
+    }
+    @supports (height:100dvh){ .pm-panel{ height:calc(100dvh - 16px); } }
+    .pm-grabber{ display:block; position:absolute; top:0; left:0; right:0; height:24px; z-index:9; pointer-events:none; }
+    .pm-grabber::before{ content:""; position:absolute; left:50%; top:9px; width:38px; height:4px; margin-left:-19px; border-radius:99px; background:rgba(10,9,8,.2); }
+    .pm-gallery{ height:clamp(290px, 47vh, 430px); }
+    @supports (height:100dvh){ .pm-gallery{ height:clamp(290px, 47dvh, 430px); } }
+    .pm-slide.studio img, .pm-frame{ left:12%; top:11%; width:76%; height:66%; }
+    .pm-gallery::after{ bottom:19%; }
+    .pm-arrow{ display:none !important; }
+    .pm-thumbs{ bottom:14px; }
+    .pm-thumb{ width:42px; height:42px; border-radius:10px; padding:4px; }
+    .pm-counter{ top:22px; left:20px; }
+    .pm-image:has(#pmHotBadge svg) .pm-counter{ left:54px; }
+    .hot-badge.hot-badge-modal{ top:18px; left:18px; }
+    .pm-close{ top:14px; right:14px; width:36px; height:36px; padding:11px; }
+    .pm-info{ height:auto; overflow:visible; padding:24px 20px 0; }
+    .pm-info h3{ font-size:23px; }
+    .pm-sub{ margin-bottom:18px; }
+    .pm-tabs-row{ gap:18px; }
+    .pm-tab-label{ font-size:9.5px; letter-spacing:.1em; }
+    .pm-buy-row{ margin:14px -20px 0; padding:12px 20px calc(14px + env(safe-area-inset-bottom, 0px)); }
+    .pm-buy-row .pm-qty-hint{ left:20px; }
+    .pm-qty{ height:50px; } .pm-qty-btn{ height:48px; } .pm-add-btn, .pm-add-btn.add-cart-btn{ height:50px; }
+  }
+
   @media (prefers-reduced-motion: reduce){
     *{ animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; scroll-behavior:auto !important; }
   }
@@ -1103,9 +1302,18 @@
   }catch(e){} })();
 </script>
 <script>
+  /* Sin zoom en celular: Safari de iPhone ignora "user-scalable=no", así que se frena el pellizco a mano */
+  (function(){
+    function stop(e){ if(e.cancelable) e.preventDefault(); }
+    ['gesturestart','gesturechange','gestureend'].forEach(function(t){ document.addEventListener(t, stop, {passive:false}); });
+    document.addEventListener('touchmove', function(e){ if(e.touches && e.touches.length > 1) stop(e); }, {passive:false});
+    document.addEventListener('touchmove', function(e){ if(typeof e.scale === 'number' && e.scale !== 1) stop(e); }, {passive:false});
+  })();
+</script>
+<script>
   /* Versión de la página: si el navegador tiene guardada una versión vieja, se recarga sola (una vez) mientras se ve el logo.
      Al subir cambios, se sube también version.json con el mismo número que MP_BUILD. */
-  window.MP_BUILD = '2026-09-26d';
+  window.MP_BUILD = '2026-09-28d';
   window.__mpVersionOK = false;
   (function(){
     function ok(){ window.__mpVersionOK = true; }
@@ -1125,11 +1333,11 @@
     }catch(e){ ok(); }
   })();
 </script>
-<link rel="stylesheet" href="experience/experience.css?v=2026-09-26d">
-<script src="experience/experience.js?v=2026-09-26d" defer></script>
+<link rel="stylesheet" href="experience/experience.css?v=2026-09-28d">
+<script src="experience/experience.js?v=2026-09-28d" defer></script>
 </head>
 <body>
-<!-- Intro de marca (se saltea con el botón, tocando la pantalla o con Esc; no se muestra con "reducir movimiento") -->
+<!-- Intro de marca: la M se carga y entra sola (no se puede saltear) -->
 <div class="xp-intro" id="xpIntro" role="presentation">
   <!-- la M se "carga" por partes: primero la barrita izquierda, después la del medio, la derecha y al final el diamante -->
   <div class="xp-intro-mark" id="xpMark" role="progressbar" aria-label="Cargando M Perfumerie" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
@@ -1139,7 +1347,6 @@
     <span class="xp-m-piece xp-m-right"><img alt=""></span>
     <span class="xp-m-piece xp-m-gem"><img alt=""></span>
   </div>
-  <button type="button" class="xp-intro-skip">Saltar intro</button>
 </div>
 <script>
   /* Barra de carga del logo: arranca apenas se ve (no espera a los demás scripts).
@@ -1224,7 +1431,8 @@
 
 <div class="product-modal" id="productModal">
   <div class="pm-overlay" id="pmOverlay"></div>
-  <div class="pm-panel">
+  <div class="pm-panel" role="dialog" aria-modal="true" aria-labelledby="pmName">
+    <div class="pm-grabber" aria-hidden="true"></div>
     <button class="close-btn pm-close" id="pmClose" aria-label="Cerrar">
       <svg viewBox="0 0 24 24" fill="none">
         <line x1="5" y1="5" x2="19" y2="19" stroke="#faf8f5" stroke-width="1.6" stroke-linecap="round"/>
@@ -1236,7 +1444,9 @@
         <button class="pm-arrow pm-arrow-prev" id="pmArrowPrev" aria-label="Foto anterior">
           <svg viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="#0a0908" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
-        <img id="pmImg" src="" alt="">
+        <div class="pm-frame" aria-hidden="true"></div>
+        <div class="pm-track" id="pmTrack"></div>
+        <div class="pm-counter" id="pmCounter" aria-hidden="true"></div>
         <div id="pmHotBadge"></div>
         <button class="pm-arrow pm-arrow-next" id="pmArrowNext" aria-label="Foto siguiente">
           <svg viewBox="0 0 24 24" fill="none"><path d="M9 5l7 7-7 7" stroke="#0a0908" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -1252,14 +1462,17 @@
         <span id="pmBrand"></span>
       </div>
       <h3 id="pmName"></h3>
-      <div class="pm-size-row" id="pmSizeRow">
-        <span class="pm-size-chip" id="pmMl"></span>
+      <div class="pm-sub" id="pmSub"></div>
+      <div class="pm-size-wrap">
+        <span class="pm-size-label">Tamaño</span>
+        <div class="pm-size-row pm-seg" id="pmSizeRow"></div>
       </div>
       <div class="price-row pm-price-row" id="pmPriceRow"></div>
       <div class="pm-tabs-row">
         <button type="button" class="pm-tab-label" id="pmTabAcordes">Acordes principales</button>
         <button type="button" class="pm-tab-label" id="pmTabIngredientes">Ingredientes</button>
         <button type="button" class="pm-tab-label" id="pmTabDescripcion">Descripción</button>
+        <span class="pm-tab-ind" aria-hidden="true"></span>
       </div>
       <div class="pm-tab-content">
         <div class="pm-ing-list" id="pmIngList"></div>
@@ -1273,8 +1486,9 @@
           <button class="pm-qty-btn" id="pmQtyPlus" aria-label="Sumar">+</button>
         </div>
         <button class="add-cart-btn pm-add-btn" id="pmAddBtn">
-          <span class="btn-label">Agregar</span>
-          <svg viewBox="0 0 24 24" fill="none"><path d="M3 4h2l2.4 12.2a2 2 0 0 0 2 1.6h8.4a2 2 0 0 0 2-1.6L21.5 8H6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="20.5" r="1.4" fill="currentColor"/><circle cx="17.5" cy="20.5" r="1.4" fill="currentColor"/></svg>
+          <span class="pm-add-main"><span class="btn-label">Agregar al carrito</span>
+          <svg viewBox="0 0 24 24" fill="none"><path d="M3 4h2l2.4 12.2a2 2 0 0 0 2 1.6h8.4a2 2 0 0 0 2-1.6L21.5 8H6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="20.5" r="1.4" fill="currentColor"/><circle cx="17.5" cy="20.5" r="1.4" fill="currentColor"/></svg></span>
+          <span class="pm-add-ok" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Agregado</span>
         </button>
       </div>
       <span class="pm-qty-hint" id="pmQtyHint"></span>
@@ -1497,35 +1711,36 @@
     </div>
     <div class="contact-grid">
       <div>
-        <span class="eyebrow">Hablemos</span>
-        <h2 style="margin-top:14px;">¿Buscás una <em>fragancia</em><br>en particular?</h2>
-        <p class="lead">Contanos qué estás buscando — diseñador, árabe o nicho — y te respondemos con disponibilidad y precio.</p>
-        <div class="perf-types">
+        <!-- los textos y datos de esta sección se pueden cambiar desde el admin ("Contacto y textos"); esto es lo que se ve si no hay nada cargado -->
+        <span class="eyebrow" id="ctEyebrow">Hablemos</span>
+        <h2 style="margin-top:14px;" id="ctTitle">¿Buscás una <em>fragancia</em><br>en particular?</h2>
+        <p class="lead" id="ctLead">Contanos qué estás buscando — diseñador, árabe o nicho — y te respondemos con disponibilidad y precio.</p>
+        <div class="perf-types" id="ctTypes">
           <div class="perf-type"><strong>Diseñador</strong><p>Fragancias de las grandes casas de moda y lujo, como Dior, Carolina Herrera o Rabanne. Son las más conocidas y fáciles de reconocer.</p></div>
           <div class="perf-type"><strong>Nicho</strong><p>Casas dedicadas solo a la perfumería, con producciones más chicas, ingredientes seleccionados y aromas más originales y exclusivos.</p></div>
           <div class="perf-type"><strong>Árabes</strong><p>Perfumería de Medio Oriente, como Lattafa, Armaf o Afnan. Aromas intensos y de gran duración, con oud, ámbar, especias y notas dulces.</p></div>
         </div>
         <div class="cta-row">
-          <a href="https://wa.me/5493416052132" class="btn-gold" target="_blank">Escribir por WhatsApp</a>
-          <a href="https://www.instagram.com/maugefragancias" class="btn-outline" target="_blank">Ver Instagram</a>
+          <a href="https://wa.me/5493416052132" class="btn-gold" target="_blank" id="ctWaBtn">Escribir por WhatsApp</a>
+          <a href="https://www.instagram.com/maugefragancias" class="btn-outline" target="_blank" id="ctIgBtn">Ver Instagram</a>
         </div>
       </div>
       <div class="info-list">
         <div class="info-item">
           <span class="eyebrow">WhatsApp</span>
-          <a href="https://wa.me/5493416052132" target="_blank">+54 9 3416 05-2132</a>
+          <a href="https://wa.me/5493416052132" target="_blank" id="ctWa">+54 9 3416 05-2132</a>
         </div>
         <div class="info-item">
           <span class="eyebrow">Email</span>
-          <a href="mailto:mperfumerie25@gmail.com">mperfumerie25@gmail.com</a>
+          <a href="mailto:mperfumerie25@gmail.com" id="ctMail">mperfumerie25@gmail.com</a>
         </div>
         <div class="info-item">
           <span class="eyebrow">Instagram</span>
-          <a href="https://www.instagram.com/maugefragancias" target="_blank">@maugefragancias</a>
+          <a href="https://www.instagram.com/maugefragancias" target="_blank" id="ctIg">@maugefragancias</a>
         </div>
         <div class="info-item">
           <span class="eyebrow">Zona</span>
-          <span>Rosario, Santa Fe — envíos a todo el país</span>
+          <span id="ctZona">Rosario, Santa Fe<br>Chañar Ladeado, Santa Fe<br>Envíos a todo el país</span>
         </div>
       </div>
     </div>
@@ -1929,9 +2144,17 @@
     const esc = t => String(t || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     const getFlyers = () => db.collection('productos').doc('_flyers').get().catch(() => new Promise(r => setTimeout(r, 1200)).then(() => db.collection('productos').doc('_flyers').get()));
     getFlyers().then(doc => {
-      window.__mpFlyersReady = true;
-      if(!doc.exists) return;
+      if(!doc.exists){ window.__mpFlyersReady = true; return; }
       const lista = (doc.data().lista || []).filter(f => f && f.pc && f.mobile && f.activo !== false);
+      // mientras se ve la M se descargan las fotos de los flyers (las del tamaño de pantalla que corresponde),
+      // así al entrar ya están listas; con internet lento no se espera más de ~4,5 s
+      (function preloadFlyers(){
+        const mobile = window.matchMedia('(max-width:640px)').matches;
+        const urls = lista.slice(0, 3).map(f => mobile ? f.mobile : f.pc).filter(Boolean);
+        const loadOne = u => new Promise(r => { const im = new Image(); im.onload = im.onerror = r; im.src = u; });
+        Promise.race([Promise.all(urls.map(loadOne)), new Promise(r => setTimeout(r, 4500))]).then(() => { window.__mpFlyersReady = true; });
+        lista.slice(3).forEach(f => { const im = new Image(); im.src = mobile ? f.mobile : f.pc; });
+      })();
       // EXPERIMENTAL: el carrusel nuevo (experience.js) escucha este evento
       window.__mpFlyers = lista;
       window.dispatchEvent(new CustomEvent('mp:flyers', { detail: lista }));
@@ -1949,6 +2172,42 @@
       }).join(''));
       if(window.heroRebuild) window.heroRebuild();
     }).catch(err => { window.__mpFlyersReady = true; console.warn('No se pudieron cargar los flyers', err); });
+  })();
+
+  // ---------- CONTACTO Y TEXTOS (se editan desde admin.html → Firestore productos/_contacto) ----------
+  // si un campo está vacío queda el texto que ya trae la página
+  (function loadContacto(){
+    const esc = t => String(t || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const rich = t => esc(t).replace(/\*([^*]+)\*/g, '<em>$1</em>').replace(/\r?\n/g, '<br>');   // *palabra* = cursiva, enter = otro renglón
+    const set = (id, html) => { const el = document.getElementById(id); if(el && html) el.innerHTML = html; };
+    db.collection('productos').doc('_contacto').get().then(doc => {
+      if(!doc.exists) return;
+      const c = doc.data() || {};
+      set('ctEyebrow', esc(c.etiqueta));
+      set('ctTitle', rich(c.titulo));
+      set('ctLead', rich(c.bajada));
+      if(Array.isArray(c.tipos)){
+        const cards = document.querySelectorAll('#ctTypes .perf-type');
+        c.tipos.forEach((t, i) => {
+          if(!cards[i] || !t) return;
+          if(t.titulo) cards[i].querySelector('strong').textContent = t.titulo;
+          if(t.texto) cards[i].querySelector('p').innerHTML = rich(t.texto);
+        });
+      }
+      const waNum = String(c.whatsapp || '').replace(/\D/g, '');
+      if(waNum.length >= 8){
+        window.__mpWaNum = waNum;
+        ['ctWaBtn', 'ctWa'].forEach(id => { const el = document.getElementById(id); if(el) el.href = 'https://wa.me/' + waNum; });
+        set('ctWa', esc(c.whatsapp));
+      }
+      if(c.email){ const el = document.getElementById('ctMail'); if(el){ el.href = 'mailto:' + c.email.trim(); el.textContent = c.email.trim(); } }
+      const ig = String(c.instagram || '').trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i, '').replace(/^@/, '').replace(/\/.*$/, '');
+      if(ig){
+        ['ctIgBtn', 'ctIg'].forEach(id => { const el = document.getElementById(id); if(el) el.href = 'https://www.instagram.com/' + encodeURIComponent(ig); });
+        set('ctIg', '@' + esc(ig));
+      }
+      if(c.zona) set('ctZona', esc(c.zona).replace(/\r?\n/g, '<br>'));
+    }).catch(err => console.warn('No se pudieron cargar los datos de contacto', err));
   })();
 
   let ofertas = [];
@@ -2198,6 +2457,7 @@
           setTimeout(() => { label.textContent = original; addBtn.classList.remove('disabled'); }, 1300);
         }
       } else {
+        pmSourceImg = card.querySelector('.prod-img:not(.prod-img-overlay)');
         openProductModal(id);
       }
     });
@@ -2234,14 +2494,21 @@
       wrap.appendChild(overlayImg);
       let showingSecond = false;
       requestAnimationFrame(() => {
+        if(!overlayImg) return;
         timer = setInterval(() => {
+          if(!overlayImg){ clearInterval(timer); timer = null; return; }
           showingSecond = !showingSecond;
           overlayImg.style.opacity = showingSecond ? '1' : '0';
         }, 1500);
       });
     }
 
-    grid.addEventListener('mouseover', (e) => {
+    // con mouse: al pasar por encima. Con el dedo: solo si se mantiene apretado (un toque rápido no cambia nada,
+    // así en iPhone el primer toque abre la ficha directo, también tocando la foto)
+    let holdTimer = null, lastTouch = 0;
+    const cancelHold = () => { if(holdTimer){ clearTimeout(holdTimer); holdTimer = null; } };
+    grid.addEventListener('pointerover', (e) => {
+      if(e.pointerType !== 'mouse' || Date.now() - lastTouch < 800) return;
       const card = e.target.closest('.prod-card');
       if(!card || (wrap && card.contains(wrap))) return;
       stopPreview();
@@ -2249,15 +2516,18 @@
     });
     grid.addEventListener('mouseleave', stopPreview);
     grid.addEventListener('touchstart', (e) => {
+      lastTouch = Date.now();
+      cancelHold();
       if(document.getElementById('productModal').classList.contains('open')) return;
       const card = e.target.closest('.prod-card');
       if(!card) return;
       stopPreview();
-      startPreview(card);
+      holdTimer = setTimeout(() => { holdTimer = null; startPreview(card); }, 380);
     }, {passive:true});
-    grid.addEventListener('touchmove', stopPreview, {passive:true});
-    grid.addEventListener('touchend', stopPreview, {passive:true});
-    grid.addEventListener('touchcancel', stopPreview, {passive:true});
+    const endTouch = () => { lastTouch = Date.now(); cancelHold(); stopPreview(); };
+    grid.addEventListener('touchmove', endTouch, {passive:true});
+    grid.addEventListener('touchend', endTouch, {passive:true});
+    grid.addEventListener('touchcancel', endTouch, {passive:true});
     // si se scrollea la página (con la rueda, sin mover el cursor) o se arrastra la fila, se corta la vista previa
     window.addEventListener('scroll', stopPreview, {passive:true});
     grid.addEventListener('scroll', stopPreview, {passive:true});
@@ -2673,31 +2943,18 @@
   let pmImageIndex = 0;
   let pmImageLoadToken = 0;
 
-  function pmSetImage(src, isStudio){
-    const imgEl = document.getElementById('pmImg');
-    const myToken = ++pmImageLoadToken;
-    imgEl.classList.add('pm-img-loading');
-    const preloader = new Image();
-    preloader.onload = () => {
-      if(myToken !== pmImageLoadToken) return; // llegó una carga más nueva, descartar esta
-      imgEl.src = src;
-      imgEl.classList.toggle('pm-img-studio', !!isStudio);
-      imgEl.classList.remove('pm-img-loading');
-    };
-    preloader.onerror = () => {
-      if(myToken !== pmImageLoadToken) return;
-      imgEl.src = src;
-      imgEl.classList.toggle('pm-img-studio', !!isStudio);
-      imgEl.classList.remove('pm-img-loading');
-    };
-    preloader.src = src;
-  }
-
-  function pmShowImage(i){
+  // galería: tira de fotos que se desliza con el dedo (las 2 primeras son de estudio: fondo blanco que se funde con el escenario)
+  function pmShowImage(i, instant){
     if(!pmImages.length) return;
-    pmImageIndex = (i + pmImages.length) % pmImages.length;
-    pmSetImage(pmImages[pmImageIndex], pmImageIndex < 2);
+    pmImageIndex = Math.max(0, Math.min(pmImages.length - 1, i));
+    const tr = document.getElementById('pmTrack');
+    tr.style.transition = instant ? 'none' : 'transform .55s cubic-bezier(.2,.8,.2,1)';
+    tr.style.transform = `translateX(${-pmImageIndex * 100}%)`;
     document.querySelectorAll('.pm-thumb').forEach((b, idx) => b.classList.toggle('active', idx === pmImageIndex));
+    const n = pmImages.length;
+    document.getElementById('pmCounter').textContent = n > 1 ? `${String(pmImageIndex + 1).padStart(2, '0')} / ${String(n).padStart(2, '0')}` : '';
+    document.getElementById('pmArrowPrev').classList.toggle('is-off', pmImageIndex === 0);
+    document.getElementById('pmArrowNext').classList.toggle('is-off', pmImageIndex === n - 1);
   }
 
   function pmRenderVariantImages(p, v){
@@ -2710,15 +2967,22 @@
     const cardImg = document.querySelector(`[data-id="${p.id}"] .prod-img`);
     pmImages = images.length ? images : (cardImg ? [cardImg.src] : []);
     pmImageIndex = 0;
-    document.getElementById('pmImg').alt = `${p.name}${v.ml ? ` ${v.ml}` : ''}`;
+    const alt = `${p.name}${v.ml ? ` ${v.ml}` : ''}`.replace(/"/g, '&quot;');
+    const track = document.getElementById('pmTrack');
+    track.innerHTML = pmImages.map((src, i) => `
+      <div class="pm-slide${i < 2 ? ' studio' : ''}"><img${i === 0 ? ' id="pmImg"' : ''} class="pm-img-loading" src="${src}" alt="${alt}${i ? ' ' + (i + 1) : ''}" draggable="false"></div>`).join('');
+    track.querySelectorAll('img').forEach(im => {
+      const ok = () => im.classList.remove('pm-img-loading');
+      if(im.complete && im.naturalWidth) ok(); else { im.addEventListener('load', ok, {once:true}); im.addEventListener('error', ok, {once:true}); }
+    });
     const imageWrap = document.querySelector('.pm-image');
     imageWrap.classList.toggle('has-multi', pmImages.length > 1);
     const thumbs = document.getElementById('pmThumbs');
     if(pmImages.length > 1){
       thumbs.style.display = 'flex';
       thumbs.innerHTML = pmImages.map((src, i) => `
-        <button class="pm-thumb${i === 0 ? ' active' : ''}" data-index="${i}">
-          <img src="${src}" alt="${p.name} ${v.ml || ''} ${i + 1}">
+        <button class="pm-thumb${i === 0 ? ' active' : ''}" data-index="${i}" aria-label="Foto ${i + 1}">
+          <img src="${src}" alt="">
         </button>
       `).join('');
       thumbs.querySelectorAll('.pm-thumb').forEach(btn => {
@@ -2728,7 +2992,7 @@
       thumbs.style.display = 'none';
       thumbs.innerHTML = '';
     }
-    if(pmImages.length) pmShowImage(0);
+    pmShowImage(0, true);
   }
 
   function openProductModal(id, addHistory=true){
@@ -2762,7 +3026,7 @@
       const rowH = 26;
       ingList.innerHTML = p.ingredientes.map(ing => `
         <div class="ing-row" style="height:${rowH}px;">
-          <div class="ing-bar-fill" style="width:${Math.max(0, Math.min(100, ing.cantidad || 0))}%; background:${ing.color || '#c9a86a'};">
+          <div class="ing-bar-fill" data-w="${Math.max(0, Math.min(100, ing.cantidad || 0))}" style="width:0%; background:${ing.color || '#c9a86a'};">
             <span class="ing-name">${nameHtml(ing.nombre || '')}</span>
           </div>
         </div>`).join('');
@@ -2770,21 +3034,213 @@
       ingList.innerHTML = `<p style="font-size:13px; color:rgba(10,9,8,0.5); font-weight:300;">Estamos cargando los acordes principales de este perfume.</p>`;
     }
     document.getElementById('pmNotas').innerHTML = `
-      <div class="notas-label">Notas de salida:</div>
-      <div class="notas-value">${nameHtml(p.notasSalida || '')}</div>
-      <div class="notas-label">Notas de corazón:</div>
-      <div class="notas-value">${nameHtml(p.notasCorazon || '')}</div>
-      <div class="notas-label">Notas de fondo:</div>
-      <div class="notas-value">${nameHtml(p.notasFondo || '')}</div>`;
-    pmShowTab('acordes');
+      <ul class="pm-notes">
+        <li><div class="k">Notas de salida</div><div class="v">${nameHtml(p.notasSalida || '—')}</div></li>
+        <li><div class="k">Notas de corazón</div><div class="v">${nameHtml(p.notasCorazon || '—')}</div></li>
+        <li><div class="k">Notas de fondo</div><div class="v">${nameHtml(p.notasFondo || '—')}</div></li>
+      </ul>`;
+    document.getElementById('pmSub').textContent = [p.genero, productVariants(p).length > 1 ? productVariants(p).length + ' tamaños' : ''].filter(Boolean).join(' · ');
+    document.getElementById('pmAddBtn').classList.remove('is-done');
+    pmShowTab('acordes', true);
     document.getElementById('pmAddBtn').dataset.id = id;
 
     pmCurrentProduct = p;
     pmRenderSizeChips(p);
     pmSelectVariant(p.ml);
 
-    document.getElementById('productModal').classList.add('open');
-    document.body.style.overflow = 'hidden';
+    const modalEl = document.getElementById('productModal');
+    const src = pmSourceImg; pmSourceImg = null;
+    const isOpen = modalEl.classList.contains('open') && !modalEl.classList.contains('pm-closing');
+    pmLastSource = src && src.closest('.prod-card') ? src : null;
+    if(isOpen) return;                         // ya abierta (ej. al volver con "adelante"): solo cambia el contenido
+    pmOpenAnimated(src);
+  }
+  let pmSourceImg = null, pmLastSource = null, pmFly = null, pmAnimToken = 0;
+  const PM_EASE = 'cubic-bezier(.2,.8,.2,1)';
+  const pmReduce = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const pmIsMobile = () => window.matchMedia('(max-width:680px)').matches;
+
+  // bloquea el fondo (en iPhone overflow:hidden solo no alcanza) sin que se mueva nada de lugar
+  let pmScrollY = 0, pmLocked = false;
+  function pmLockScroll(){
+    if(pmLocked) return; pmLocked = true;
+    pmScrollY = window.scrollY || window.pageYOffset || 0;
+    const sbw = window.innerWidth - document.documentElement.clientWidth;
+    document.body.style.top = (-pmScrollY) + 'px';
+    if(sbw > 0) document.body.style.paddingRight = sbw + 'px';
+    document.documentElement.classList.add('pm-locked');
+  }
+  function pmUnlockScroll(){
+    if(!pmLocked) return; pmLocked = false;
+    document.documentElement.classList.remove('pm-locked');
+    document.body.style.top = ''; document.body.style.paddingRight = '';
+    const html = document.documentElement, prev = html.style.scrollBehavior;
+    html.style.scrollBehavior = 'auto';
+    window.scrollTo(0, pmScrollY);
+    html.style.scrollBehavior = prev;
+  }
+
+  // rectángulo real que ocupa la foto dentro de su caja (object-fit: contain)
+  function pmContentRect(box, ar, alignBottom){
+    let w = box.width, h = box.width / ar;
+    if(h > box.height){ h = box.height; w = h * ar; }
+    return { left: box.left + (box.width - w) / 2, top: alignBottom ? box.top + box.height - h : box.top + (box.height - h) / 2, width: w, height: h };
+  }
+  function pmVisibleRect(el){
+    if(!el || !el.isConnected) return null;
+    const r = el.getBoundingClientRect();
+    if(r.width < 8 || r.height < 8 || r.bottom < 30 || r.top > window.innerHeight - 10 || r.right < 0 || r.left > window.innerWidth) return null;
+    return r;
+  }
+  function pmSrcRect(src){
+    const r = pmVisibleRect(src);
+    if(!r || !src.complete || !src.naturalWidth) return null;
+    const pos = getComputedStyle(src).objectPosition || '';
+    return pmContentRect(r, src.naturalWidth / src.naturalHeight, /100%|bottom/.test(pos.split(' ')[1] || pos));
+  }
+  function pmStageRect(ar){ return pmContentRect(document.querySelector('.pm-frame').getBoundingClientRect(), ar, false); }
+  function pmInsetFor(rect, panelRect, radius){
+    const t = Math.max(0, rect.top - panelRect.top), l = Math.max(0, rect.left - panelRect.left);
+    const r = Math.max(0, panelRect.right - rect.left - rect.width), b = Math.max(0, panelRect.bottom - rect.top - rect.height);
+    return `inset(${t}px ${r}px ${b}px ${l}px round ${radius}px)`;
+  }
+  // transforma el rectángulo grande (destino) para que coincida con el chico (origen)
+  function pmTf(small, big){ return `translate(${small.left - big.left}px, ${small.top - big.top}px) scale(${small.width / big.width})`; }
+  function pmMakeFly(src, big){
+    const el = document.createElement('img');
+    el.className = 'pm-fly'; el.alt = ''; el.decoding = 'sync';
+    el.src = src.currentSrc || src.src;
+    Object.assign(el.style, { left: big.left + 'px', top: big.top + 'px', width: big.width + 'px', height: big.height + 'px' });
+    document.body.appendChild(el);
+    return el;
+  }
+  function pmClearFly(){
+    if(pmFly){ pmFly.el.getAnimations && pmFly.el.getAnimations().forEach(a => a.cancel()); pmFly.el.remove(); if(pmFly.src) pmFly.src.classList.remove('pm-src-hidden'); pmFly = null; }
+    const im = document.getElementById('pmImg'); if(im) im.classList.remove('pm-img-hidden');
+  }
+  function pmPanel(){ return document.querySelector('#productModal .pm-panel'); }
+  function pmCancelPanelAnims(){ const pn = pmPanel(); pn.getAnimations && pn.getAnimations().forEach(a => a.cancel()); pn.style.transform = ''; pn.style.clipPath = ''; }
+  const pmFullClip = () => pmIsMobile() ? 'inset(0px 0px 0px 0px round 26px 26px 0px 0px)' : 'inset(0px 0px 0px 0px round 26px)';
+
+  function pmOpenAnimated(src){
+    const token = ++pmAnimToken;
+    const modalEl = document.getElementById('productModal');
+    const panel = pmPanel();
+    const pmImg = document.getElementById('pmImg');
+    pmClearFly(); pmCancelPanelAnims();
+    // la miniatura se mide antes de bloquear el fondo
+    const from = (!pmReduce() && src) ? pmSrcRect(src) : null;
+    pmLockScroll();
+    panel.scrollTop = 0; document.querySelector('.pm-info').scrollTop = 0;
+    modalEl.classList.remove('pm-closing', 'pm-shown');
+    modalEl.classList.add('open');
+    requestAnimationFrame(pmPlaceIndicators);
+    const show = () => { if(token === pmAnimToken){ modalEl.classList.add('pm-shown'); pmPlaceIndicators(); pmGrowAccords(); } };
+    if(pmReduce() || !panel.animate){ show(); return; }
+
+    if(!from || !pmImg){
+      // sin miniatura a la vista: el recuadro aparece suave
+      panel.animate([
+        { opacity: 0, transform: pmIsMobile() ? 'translateY(60px)' : 'translateY(22px) scale(.97)' },
+        { opacity: 1, transform: 'none' }
+      ], { duration: 560, easing: PM_EASE });
+      setTimeout(show, 160);
+      return;
+    }
+
+    const ar = src.naturalWidth / src.naturalHeight;
+    const big = pmStageRect(ar);
+    const pr = panel.getBoundingClientRect();
+    const el = pmMakeFly(src, big);
+    pmFly = { el, src };
+    pmImg.classList.add('pm-img-hidden');
+    src.classList.add('pm-src-hidden');
+
+    // 1) el perfume sale de la miniatura, recortado, y crece hasta su lugar
+    const fly = el.animate([
+      { transform: pmTf(from, big) },
+      { transform: 'none' }
+    ], { duration: 640, easing: 'cubic-bezier(.25,.9,.25,1)', fill: 'both' });
+    // 2) el recuadro se arma alrededor del perfume, desde su silueta hacia afuera
+    panel.animate([
+      { clipPath: pmInsetFor(big, pr, 18), opacity: 0 },
+      { clipPath: pmInsetFor(big, pr, 18), opacity: 1, offset: .18 },
+      { clipPath: pmFullClip(), opacity: 1 }
+    ], { duration: 620, delay: 300, easing: PM_EASE, fill: 'backwards' });
+    // 3) aparece el resto (nombre, precio, acordes, fotos)
+    setTimeout(show, 640);
+
+    fly.onfinish = () => {
+      if(token !== pmAnimToken) return;
+      src.classList.remove('pm-src-hidden');
+      let tries = 0;
+      const land = () => {
+        if(token !== pmAnimToken) return;
+        if(pmImg.classList.contains('pm-img-loading') && ++tries < 80){ setTimeout(land, 50); return; }
+        const same = pmImg.currentSrc === el.currentSrc || pmImg.src === el.src;
+        if(same){
+          // es la misma foto y en el mismo lugar: se reemplaza sin que se note
+          pmImg.style.transition = 'none';
+          pmImg.classList.remove('pm-img-hidden');
+          void pmImg.offsetWidth;
+          pmImg.style.transition = '';
+          if(pmFly && pmFly.el === el){ el.remove(); pmFly = null; }
+          return;
+        }
+        pmImg.classList.remove('pm-img-hidden');
+        const fade = el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 320, easing: 'ease', fill: 'forwards' });
+        fade.onfinish = () => { if(pmFly && pmFly.el === el){ el.remove(); pmFly = null; } };
+      };
+      land();
+    };
+  }
+
+  function pmCloseAnimated(){
+    const modalEl = document.getElementById('productModal');
+    if(!modalEl.classList.contains('open') || modalEl.classList.contains('pm-closing')){ pmUnlockScroll(); return; }
+    const token = ++pmAnimToken;
+    const panel = pmPanel();
+    const pmImg = document.getElementById('pmImg');
+    const src = pmLastSource; pmLastSource = null;
+    const dragged = panel.style.transform;
+    pmClearFly();
+    const pr = panel.getBoundingClientRect();
+    const to = (!pmReduce() && src && pmImg && pmImageIndex === 0 && !dragged && panel.scrollTop < 40) ? pmSrcRect(src) : null;
+    const ar = to ? src.naturalWidth / src.naturalHeight : 1;
+    const big = to ? pmStageRect(ar) : null;
+    pmUnlockScroll();                      // la página vuelve a su lugar (no se mueve nada a la vista)
+    modalEl.classList.remove('pm-shown');
+    modalEl.classList.add('pm-closing');
+    const finish = () => {
+      if(token !== pmAnimToken) return;
+      modalEl.classList.remove('open', 'pm-closing', 'pm-dragging');
+      pmCancelPanelAnims(); pmClearFly();
+    };
+    if(pmReduce() || !panel.animate){ finish(); return; }
+    pmCancelPanelAnims();
+    if(!to){
+      const a = panel.animate([
+        { opacity: 1, transform: dragged || 'none' },
+        { opacity: pmIsMobile() ? 1 : 0, transform: pmIsMobile() ? 'translateY(100%)' : 'translateY(16px) scale(.97)' }
+      ], { duration: pmIsMobile() ? 380 : 300, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'forwards' });
+      a.onfinish = finish;
+      return;
+    }
+    // el recuadro se cierra sobre el perfume y el perfume vuelve a su miniatura
+    const el = pmMakeFly(src, big);
+    pmFly = { el, src };
+    pmImg.classList.add('pm-img-hidden');
+    src.classList.add('pm-src-hidden');
+    panel.animate([
+      { clipPath: pmFullClip(), opacity: 1 },
+      { clipPath: pmInsetFor(big, pr, 18), opacity: 1, offset: .8 },
+      { clipPath: pmInsetFor(big, pr, 18), opacity: 0 }
+    ], { duration: 380, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'forwards' });
+    const fly = el.animate([
+      { transform: 'none' },
+      { transform: pmTf(to, big) }
+    ], { duration: 560, delay: 170, easing: 'cubic-bezier(.3,.7,.2,1)', fill: 'both' });
+    fly.onfinish = finish;
   }
   let pmCurrentProduct = null;
   let pmCurrentVariantMl = null;
@@ -2792,19 +3248,37 @@
   function pmRenderSizeChips(p){
     const row = document.getElementById('pmSizeRow');
     const variantes = productVariants(p);
-    if(variantes.length <= 1){
-      row.innerHTML = `<span class="pm-size-chip" id="pmMl">${variantes[0].ml || ''}</span>`;
-      return;
-    }
-    row.innerHTML = variantes.map(v => `
-      <button type="button" class="pm-size-chip${v.stock === false ? ' sin-stock-variant' : ''}" data-ml="${v.ml}">${v.ml}</button>
+    row.innerHTML = '<span class="pm-seg-ind" aria-hidden="true"></span>' + variantes.map(v => `
+      <button type="button" class="pm-size-chip${v.stock === false ? ' sin-stock-variant' : ''}" data-ml="${v.ml || ''}">${v.ml || ''}</button>
     `).join('');
+    row.classList.toggle('is-single', variantes.length <= 1);
     row.querySelectorAll('.pm-size-chip').forEach(btn => {
-      btn.addEventListener('click', () => pmSelectVariant(btn.dataset.ml));
+      btn.addEventListener('click', () => { if(btn.dataset.ml !== pmCurrentVariantMl) pmSelectVariant(btn.dataset.ml, true); });
     });
   }
+  // marcadores que se deslizan (tamaño y pestañas)
+  function pmMoveInd(ind, btn){
+    if(!ind || !btn || !btn.offsetWidth) return;
+    ind.style.width = btn.offsetWidth + 'px';
+    ind.style.transform = `translateX(${btn.offsetLeft}px)`;
+  }
+  function pmPlaceIndicators(){
+    pmMoveInd(document.querySelector('#pmSizeRow .pm-seg-ind'), document.querySelector('#pmSizeRow .pm-size-chip.active'));
+    pmMoveInd(document.querySelector('.pm-tab-ind'), document.querySelector('.pm-tab-label.active'));
+  }
+  window.addEventListener('resize', () => { if(document.getElementById('productModal').classList.contains('open')) pmPlaceIndicators(); });
+  // las barras de acordes se llenan en cascada
+  function pmGrowAccords(){
+    const list = document.getElementById('pmIngList');
+    const bars = list.querySelectorAll('.ing-bar-fill');
+    list.classList.remove('go');
+    bars.forEach(b => { b.style.transition = 'none'; b.style.width = '0%'; });
+    void list.offsetWidth;
+    bars.forEach((b, i) => { b.style.transition = ''; b.style.transitionDelay = (i * 45) + 'ms'; b.style.width = b.dataset.w + '%'; });
+    list.classList.add('go');
+  }
 
-  function pmSelectVariant(ml){
+  function pmSelectVariant(ml, animate){
     const p = pmCurrentProduct;
     if(!p) return;
     const v = findVariant(p, ml) || {};
@@ -2814,13 +3288,18 @@
     document.querySelectorAll('#pmSizeRow .pm-size-chip').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.ml === pmCurrentVariantMl);
     });
+    pmMoveInd(document.querySelector('#pmSizeRow .pm-seg-ind'), document.querySelector('#pmSizeRow .pm-size-chip.active'));
 
     const priceRow = document.getElementById('pmPriceRow');
-    if(v.priceOld){
-      priceRow.innerHTML = `<span class="price-new">${v.priceNew}</span><span class="price-old">${v.priceOld}</span><span class="sale-badge" style="position:static;">${v.off || ''}</span>`;
-    } else {
-      priceRow.innerHTML = `<span class="price-new">${v.price || ''}</span>`;
-    }
+    const priceHtml = v.priceOld
+      ? `<span class="price-new">${v.priceNew}</span><span class="price-old">${v.priceOld}</span><span class="sale-badge" style="position:static;">${v.off || ''}</span>`
+      : `<span class="price-new">${v.price || ''}</span>`;
+    if(animate && priceRow.animate && !pmReduce()){
+      priceRow.animate([{ transform: 'none', opacity: 1 }, { transform: 'translateY(-40%)', opacity: 0 }], { duration: 180, easing: 'ease-in' }).onfinish = () => {
+        priceRow.innerHTML = priceHtml;
+        priceRow.animate([{ transform: 'translateY(40%)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 380, easing: 'cubic-bezier(.2,.8,.2,1)' });
+      };
+    } else priceRow.innerHTML = priceHtml;
 
     const pmDescripcionEl = document.getElementById('pmDescripcion');
     pmDescripcionEl.innerHTML = `<div class="notas-value">${nameHtml(buildDescripcion(p, pmCurrentVariantMl))}</div>`;
@@ -2842,7 +3321,7 @@
       stockBadgeEl.style.display = 'none';
       document.getElementById('pmQty').style.opacity = '';
       addBtn.disabled = false;
-      addBtn.querySelector('.btn-label').textContent = 'Agregar';
+      addBtn.querySelector('.btn-label').textContent = 'Agregar al carrito';
       pmCurrentQty = 1;
       pmUpdateQtyLimits();
     }
@@ -2867,29 +3346,79 @@
       minusBtn.disabled = false;
     }
   }
-  function pmShowTab(tab){
+  function pmShowTab(tab, silent){
+    const was = document.querySelector('.pm-tab-label.active');
     document.getElementById('pmTabAcordes').classList.toggle('active', tab === 'acordes');
     document.getElementById('pmTabIngredientes').classList.toggle('active', tab === 'ingredientes');
     document.getElementById('pmTabDescripcion').classList.toggle('active', tab === 'descripcion');
-    document.getElementById('pmIngList').style.display = tab === 'acordes' ? 'flex' : 'none';
-    document.getElementById('pmNotas').style.display = tab === 'ingredientes' ? 'block' : 'none';
-    document.getElementById('pmDescripcion').style.display = tab === 'descripcion' ? 'block' : 'none';
+    document.getElementById('pmIngList').classList.toggle('pm-pane-on', tab === 'acordes');
+    document.getElementById('pmNotas').classList.toggle('pm-pane-on', tab === 'ingredientes');
+    document.getElementById('pmDescripcion').classList.toggle('pm-pane-on', tab === 'descripcion');
+    pmMoveInd(document.querySelector('.pm-tab-ind'), document.querySelector('.pm-tab-label.active'));
+    if(tab === 'acordes' && !silent && was && was.id !== 'pmTabAcordes') pmGrowAccords();
   }
   document.getElementById('pmTabAcordes').addEventListener('click', () => pmShowTab('acordes'));
   document.getElementById('pmTabIngredientes').addEventListener('click', () => pmShowTab('ingredientes'));
   document.getElementById('pmTabDescripcion').addEventListener('click', () => pmShowTab('descripcion'));
-  function closeProductModal(){
-    document.getElementById('productModal').classList.remove('open');
-    document.body.style.overflow = '';
-  }
+  function closeProductModal(){ pmCloseAnimated(); }
   function closeProductModalWithHistory(){
     if(history.state && history.state.mperfView && history.state.mperfView.type === 'product') history.back();
     else closeProductModal();
   }
   document.getElementById('pmClose').addEventListener('click', closeProductModalWithHistory);
+  document.querySelector('.pm-buy-row').appendChild(document.getElementById('pmQtyHint'));
+  document.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape' && document.getElementById('productModal').classList.contains('open')) closeProductModalWithHistory();
+  });
+  // celular: deslizar la hoja hacia abajo para cerrarla (desde arriba de todo)
+  (function(){
+    const modalEl = document.getElementById('productModal');
+    const panel = modalEl.querySelector('.pm-panel');
+    const mq = window.matchMedia('(max-width:680px)');
+    let y0 = 0, x0 = 0, t0 = 0, dy = 0, active = false, decided = false, pulling = false;
+    panel.addEventListener('touchstart', (e) => {
+      if(!mq.matches || e.touches.length > 1) return;
+      active = panel.scrollTop <= 0; decided = false; pulling = false; dy = 0;
+      y0 = e.touches[0].clientY; x0 = e.touches[0].clientX; t0 = Date.now();
+    }, {passive:true});
+    panel.addEventListener('touchmove', (e) => {
+      if(!active) return;
+      const ddy = e.touches[0].clientY - y0, ddx = e.touches[0].clientX - x0;
+      if(!decided){
+        if(Math.abs(ddy) < 8 && Math.abs(ddx) < 8) return;
+        decided = true;
+        pulling = ddy > 0 && Math.abs(ddy) > Math.abs(ddx) && panel.scrollTop <= 0;
+        if(pulling) modalEl.classList.add('pm-dragging');
+        else { active = false; return; }
+      }
+      if(!pulling) return;
+      if(e.cancelable) e.preventDefault();
+      dy = Math.max(0, ddy);
+      panel.style.transform = 'translateY(' + dy + 'px)';
+      modalEl.querySelector('.pm-overlay').style.opacity = String(Math.max(.25, 1 - dy / (panel.offsetHeight * 1.1)));
+    }, {passive:false});
+    const end = () => {
+      if(!active) return; active = false;
+      modalEl.querySelector('.pm-overlay').style.opacity = '';
+      if(!pulling) return;
+      const v = dy / Math.max(1, Date.now() - t0);
+      modalEl.classList.remove('pm-dragging');
+      if(dy > Math.min(140, panel.offsetHeight * .25) || (v > .55 && dy > 40)){
+        pmLastSource = null;                // la hoja sigue hacia abajo, sin "vuelo" de la foto
+        closeProductModalWithHistory();
+      } else {
+        const back = panel.animate([{ transform: panel.style.transform }, { transform: 'none' }], { duration: 320, easing: PM_EASE });
+        panel.style.transform = '';
+        back.onfinish = () => {};
+      }
+    };
+    panel.addEventListener('touchend', end, {passive:true});
+    panel.addEventListener('touchcancel', end, {passive:true});
+  })();
   document.getElementById('pmBrand').addEventListener('click', () => {
     const brand = document.getElementById('pmBrand').dataset.brand;
     if(!brand) return;
+    pmLastSource = null;   // se va a otra página: el recuadro se cierra sin volver a la miniatura
     closeProductModal();
     if(history.state && history.state.mperfView && history.state.mperfView.type === 'product'){
       history.replaceState({...history.state,mperfView:{type:'section',id:'marcas'}},'',location.href);
@@ -2901,36 +3430,39 @@
   document.getElementById('pmArrowPrev').addEventListener('click', () => pmShowImage(pmImageIndex - 1));
   document.getElementById('pmArrowNext').addEventListener('click', () => pmShowImage(pmImageIndex + 1));
 
-  // deslizar con el dedo para pasar de foto en mobile
+  // deslizar las fotos: la tira sigue al dedo (o al mouse) y se acomoda sola
   (function(){
-    const imgArea = document.querySelector('.pm-image');
-    let touchStartX = 0, touchStartY = 0, dragging = false, lockedHorizontal = false;
-    imgArea.addEventListener('touchstart', (e) => {
-      touchStartX = e.changedTouches[0].clientX;
-      touchStartY = e.changedTouches[0].clientY;
-      dragging = true;
-      lockedHorizontal = false;
-    }, {passive:true});
-    imgArea.addEventListener('touchmove', (e) => {
-      if(!dragging) return;
-      const dx = e.changedTouches[0].clientX - touchStartX;
-      const dy = e.changedTouches[0].clientY - touchStartY;
-      if(!lockedHorizontal && Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy)){
-        lockedHorizontal = true;
-      }
-      if(lockedHorizontal && e.cancelable) e.preventDefault();
-    }, {passive:false});
-    imgArea.addEventListener('touchend', (e) => {
-      if(!dragging) return;
-      dragging = false;
-      const dx = e.changedTouches[0].clientX - touchStartX;
-      const dy = e.changedTouches[0].clientY - touchStartY;
-      if(Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) && pmImages.length > 1){
-        e.stopPropagation();
-        pmShowImage(pmImageIndex + (dx < 0 ? 1 : -1));
-      }
+    const area = document.querySelector('.pm-image'), tr = document.getElementById('pmTrack');
+    let x0 = 0, y0 = 0, dx = 0, t0 = 0, down = false, dir = null;
+    area.addEventListener('pointerdown', (e) => {
+      if(e.target.closest('button') || (e.pointerType === 'mouse' && e.button !== 0)) return;
+      down = true; dir = null; dx = 0; x0 = e.clientX; y0 = e.clientY; t0 = performance.now();
     });
-    imgArea.addEventListener('touchcancel', () => { dragging = false; });
+    area.addEventListener('pointermove', (e) => {
+      if(!down || pmImages.length < 2) return;
+      const mx = e.clientX - x0, my = e.clientY - y0;
+      if(!dir){
+        if(Math.abs(mx) < 8 && Math.abs(my) < 8) return;
+        dir = Math.abs(mx) > Math.abs(my) ? 'x' : 'y';
+        if(dir === 'x'){ try{ area.setPointerCapture(e.pointerId); }catch(err){} }
+      }
+      if(dir !== 'x') return;
+      dx = mx;
+      const n = pmImages.length, edge = (pmImageIndex === 0 && dx > 0) || (pmImageIndex === n - 1 && dx < 0) ? .3 : 1;
+      tr.style.transition = 'none';
+      tr.style.transform = `translateX(calc(${-pmImageIndex * 100}% + ${dx * edge}px))`;
+    });
+    const end = () => {
+      if(!down) return; down = false;
+      if(dir !== 'x') return;
+      const v = dx / Math.max(1, performance.now() - t0), w = area.clientWidth;
+      if(dx < -w * .18 || v < -.45) pmShowImage(pmImageIndex + 1);
+      else if(dx > w * .18 || v > .45) pmShowImage(pmImageIndex - 1);
+      else pmShowImage(pmImageIndex);
+    };
+    area.addEventListener('pointerup', end);
+    area.addEventListener('pointercancel', end);
+    area.addEventListener('dragstart', e => e.preventDefault());
   })();
 
   document.getElementById('pmQtyMinus').addEventListener('click', () => {
@@ -2953,8 +3485,12 @@
   });
   document.getElementById('pmAddBtn').addEventListener('click', (e) => {
     if(pmCurrentQty <= 0) return;
-    addToCart(e.currentTarget.dataset.id, pmCurrentVariantMl, pmCurrentQty);
-    pmUpdateQtyLimits();
+    const btn = e.currentTarget;
+    if(btn.classList.contains('is-done')) return;
+    addToCart(btn.dataset.id, pmCurrentVariantMl, pmCurrentQty);
+    btn.classList.add('is-done');
+    clearTimeout(btn._doneT);
+    btn._doneT = setTimeout(() => { btn.classList.remove('is-done'); pmUpdateQtyLimits(); }, 1700);
   });
 
   // ---------- CARRITO ----------
@@ -3069,7 +3605,7 @@
           msg += `• ${p.name} (${c.ml || ''}) (x${c.qty}) — ${money(unit * c.qty)}\n`;
         });
         msg += `\nTotal: ${money(total)}\n\nhttps://mperfumerie.com.ar\n\n¡Quiero terminar mi compra!`;
-        openWhatsappConfirm('https://wa.me/5493416052132?text=' + encodeURIComponent(msg));
+        openWhatsappConfirm('https://wa.me/' + (window.__mpWaNum || '5493416052132') + '?text=' + encodeURIComponent(msg));
       });
     }
   }
@@ -3104,7 +3640,16 @@
   document.getElementById('cartOverlay').addEventListener('click', closeCart);
 
   updateCartUI();
-  window.__mpDataReady = true;
+  // la M espera también a las primeras fotos de productos del inicio (máx. ~4 s)
+  (function(){
+    const imgs = [];
+    ['tendenciasGrid','tendenciasGrid2','ofertasGrid','nuevosGrid'].forEach(id => {
+      const g = document.getElementById(id);
+      if(g) Array.prototype.slice.call(g.querySelectorAll('.prod-img'), 0, 4).forEach(i => imgs.push(i));
+    });
+    const waitImg = im => (im.complete ? Promise.resolve() : new Promise(r => { im.addEventListener('load', r, {once:true}); im.addEventListener('error', r, {once:true}); }));
+    Promise.race([Promise.all(imgs.map(waitImg)), new Promise(r => setTimeout(r, 4000))]).then(() => { window.__mpDataReady = true; });
+  })();
   } catch(err) {
     window.__mpDataReady = true; // no se traba el inicio aunque falle
     console.error('Error inicializando la tienda (productos):', err);

@@ -22,10 +22,8 @@
     try{ sessionStorage.setItem('xpIntroSeen', '1'); }catch(e){}
     var el = doc.getElementById('xpIntro');
     if(el && el.parentNode) el.parentNode.removeChild(el);
-    doc.removeEventListener('keydown', onIntroKey);
     introListeners.splice(0).forEach(function(fn){ fn(); });
   }
-  function onIntroKey(e){ if(e.key === 'Escape') skipIntro(); }
   function skipIntro(){
     var el = doc.getElementById('xpIntro');
     if(!el || el.classList.contains('is-leaving')) return;
@@ -40,8 +38,6 @@
     window.__xpIntroSkip = function(){ introListeners.splice(0).forEach(function(fn){ fn(); }); skipIntro(); };
     if(el.classList.contains('is-complete')) window.__xpIntroSkip();
     el.addEventListener('animationend', function(e){ if(e.target === el && el.classList.contains('is-leaving')) finishIntro(); });
-    el.addEventListener('click', skipIntro);
-    doc.addEventListener('keydown', onIntroKey);
     setTimeout(finishIntro, 8000); // red de seguridad
   }
 

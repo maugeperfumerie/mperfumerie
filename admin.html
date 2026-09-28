@@ -87,6 +87,15 @@
   .fl-drop .fl-err{color:#e57373;font-size:12px;margin-top:4px}
   .fl-drop input[type=range]{padding:0;margin:6px 0 0}
   .fl-status{font-size:13px;margin-top:8px;color:#aaa}
+  /* ---------- Contacto y textos ---------- */
+  .ct-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 18px;margin-top:10px}
+  .ct-grid .full{grid-column:1/-1}
+  .ct-grid textarea{min-height:64px;resize:vertical;font-family:inherit}
+  .ct-sub{grid-column:1/-1;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);font-size:13px;color:var(--gold);font-weight:bold}
+  .ct-tip{font-size:11px;color:#777;margin:0 0 4px}
+  .ct-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px}
+  .ct-actions button{margin:0}
+  @media (max-width:700px){ .ct-grid{grid-template-columns:1fr} }
   @media (max-width:700px){ .fl-drops{grid-template-columns:1fr} .fl-item{grid-template-columns:28px 1fr} .fl-actions{grid-column:1/-1;flex-direction:row;flex-wrap:wrap} .fl-imgs .th-pc{width:100%} }
 </style>
 </head>
@@ -155,6 +164,61 @@
         </div>
         <button type="button" id="flAgregar" disabled>Agregar flyer</button>
         <div class="fl-status" id="flStatus"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card fl-card" id="contactoCard">
+    <div class="fl-head">
+      <div><b>Contacto y textos</b> <span class="muted" style="margin:0">— la sección "Hablemos" de abajo de todo: textos, WhatsApp, email, Instagram y zona.</span></div>
+      <button type="button" class="secondary" id="ctToggle">Mostrar</button>
+    </div>
+    <div id="ctBody" class="hidden">
+      <div class="ct-grid">
+        <div class="ct-sub">Datos de contacto</div>
+        <div>
+          <label for="ctWhatsapp">WhatsApp (como se muestra en la página)</label>
+          <input id="ctWhatsapp" placeholder="+54 9 3416 05-2132">
+          <p class="ct-tip">También es el número al que llegan los pedidos del carrito.</p>
+        </div>
+        <div>
+          <label for="ctEmail">Email</label>
+          <input id="ctEmail" type="email" placeholder="mperfumerie25@gmail.com">
+        </div>
+        <div>
+          <label for="ctInstagram">Instagram (usuario, con o sin @)</label>
+          <input id="ctInstagram" placeholder="@maugefragancias">
+        </div>
+        <div>
+          <label for="ctZonaIn">Zona (un renglón por línea)</label>
+          <textarea id="ctZonaIn" rows="3" placeholder="Rosario, Santa Fe"></textarea>
+        </div>
+
+        <div class="ct-sub">Textos de "Hablemos"</div>
+        <div>
+          <label for="ctEtiqueta">Etiqueta chica de arriba</label>
+          <input id="ctEtiqueta" placeholder="Hablemos">
+        </div>
+        <div>
+          <label for="ctTitulo">Título</label>
+          <textarea id="ctTitulo" rows="2"></textarea>
+          <p class="ct-tip">Poné una palabra entre asteriscos para que salga en cursiva dorada: *fragancia*. Enter = otro renglón.</p>
+        </div>
+        <div class="full">
+          <label for="ctBajada">Texto debajo del título</label>
+          <textarea id="ctBajada" rows="2"></textarea>
+        </div>
+        <div><label for="ctT1">Tipo 1 · nombre</label><input id="ctT1"></div>
+        <div><label for="ctT1t">Tipo 1 · explicación</label><textarea id="ctT1t" rows="3"></textarea></div>
+        <div><label for="ctT2">Tipo 2 · nombre</label><input id="ctT2"></div>
+        <div><label for="ctT2t">Tipo 2 · explicación</label><textarea id="ctT2t" rows="3"></textarea></div>
+        <div><label for="ctT3">Tipo 3 · nombre</label><input id="ctT3"></div>
+        <div><label for="ctT3t">Tipo 3 · explicación</label><textarea id="ctT3t" rows="3"></textarea></div>
+      </div>
+      <div class="ct-actions">
+        <button type="button" id="ctGuardar">Guardar cambios</button>
+        <button type="button" class="secondary" id="ctOriginal">Volver a los textos originales</button>
+        <span class="fl-status" id="ctStatus" style="margin:0"></span>
       </div>
     </div>
   </div>
@@ -350,6 +414,67 @@
     body.classList.toggle('hidden');
     document.getElementById('flToggle').textContent = body.classList.contains('hidden') ? 'Mostrar' : 'Ocultar';
     if(!body.classList.contains('hidden')) cargarFlyers();
+  };
+
+  // ---------- CONTACTO Y TEXTOS ----------
+  // se guardan en productos/_contacto (sin campo "orden", así no aparece como producto); la página los lee al cargar
+  const CT_DOC = db.collection('productos').doc('_contacto');
+  const CT_ORIGINAL = {
+    whatsapp: '+54 9 3416 05-2132',
+    email: 'mperfumerie25@gmail.com',
+    instagram: '@maugefragancias',
+    zona: 'Rosario, Santa Fe\nChañar Ladeado, Santa Fe\nEnvíos a todo el país',
+    etiqueta: 'Hablemos',
+    titulo: '¿Buscás una *fragancia*\nen particular?',
+    bajada: 'Contanos qué estás buscando — diseñador, árabe o nicho — y te respondemos con disponibilidad y precio.',
+    tipos: [
+      { titulo: 'Diseñador', texto: 'Fragancias de las grandes casas de moda y lujo, como Dior, Carolina Herrera o Rabanne. Son las más conocidas y fáciles de reconocer.' },
+      { titulo: 'Nicho', texto: 'Casas dedicadas solo a la perfumería, con producciones más chicas, ingredientes seleccionados y aromas más originales y exclusivos.' },
+      { titulo: 'Árabes', texto: 'Perfumería de Medio Oriente, como Lattafa, Armaf o Afnan. Aromas intensos y de gran duración, con oud, ámbar, especias y notas dulces.' }
+    ]
+  };
+  const ctIds = { whatsapp:'ctWhatsapp', email:'ctEmail', instagram:'ctInstagram', zona:'ctZonaIn', etiqueta:'ctEtiqueta', titulo:'ctTitulo', bajada:'ctBajada' };
+  function ctLlenar(c){
+    Object.entries(ctIds).forEach(([k, id]) => { document.getElementById(id).value = c[k] || ''; });
+    [1,2,3].forEach(n => {
+      const t = (c.tipos || [])[n-1] || {};
+      document.getElementById('ctT' + n).value = t.titulo || '';
+      document.getElementById('ctT' + n + 't').value = t.texto || '';
+    });
+  }
+  function ctLeer(){
+    const c = {};
+    Object.entries(ctIds).forEach(([k, id]) => { c[k] = document.getElementById(id).value.trim(); });
+    c.tipos = [1,2,3].map(n => ({ titulo: document.getElementById('ctT' + n).value.trim(), texto: document.getElementById('ctT' + n + 't').value.trim() }));
+    return c;
+  }
+  function ctMsg(t, err){ const el = document.getElementById('ctStatus'); el.textContent = t; el.style.color = err ? '#e57373' : '#aaa'; }
+  async function ctCargar(){
+    ctMsg('Cargando…');
+    try{
+      const d = await CT_DOC.get();
+      ctLlenar(d.exists ? Object.assign({}, CT_ORIGINAL, d.data()) : CT_ORIGINAL);
+      ctMsg(d.exists ? '' : 'Todavía no guardaste cambios: estos son los textos que tiene la página hoy.');
+    }catch(e){ ctMsg('No se pudieron cargar los datos: ' + e.message, true); }
+  }
+  document.getElementById('ctToggle').onclick = () => {
+    const body = document.getElementById('ctBody');
+    body.classList.toggle('hidden');
+    document.getElementById('ctToggle').textContent = body.classList.contains('hidden') ? 'Mostrar' : 'Ocultar';
+    if(!body.classList.contains('hidden')) ctCargar();
+  };
+  document.getElementById('ctOriginal').onclick = () => { ctLlenar(CT_ORIGINAL); ctMsg('Se pusieron los textos originales. Tocá "Guardar cambios" para aplicarlos.'); };
+  document.getElementById('ctGuardar').onclick = async () => {
+    const c = ctLeer();
+    const digits = c.whatsapp.replace(/\D/g, '');
+    if(c.whatsapp && digits.length < 10){ ctMsg('Revisá el WhatsApp: tiene que tener el número completo con código de país (ej: +54 9 341 …).', true); return; }
+    if(c.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.email)){ ctMsg('Revisá el email: no parece válido.', true); return; }
+    const btn = document.getElementById('ctGuardar'); btn.disabled = true; ctMsg('Guardando…');
+    try{
+      await CT_DOC.set(Object.assign(c, { actualizado: firebase.firestore.FieldValue.serverTimestamp() }));
+      ctMsg('Guardado ✓ — ya se ve en la página (recargala para verlo).');
+    }catch(e){ ctMsg('No se pudo guardar: ' + e.message, true); }
+    btn.disabled = false;
   };
 
   function flEsc(t){ return String(t||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
