@@ -87,6 +87,26 @@
   .fl-drop .fl-err{color:#e57373;font-size:12px;margin-top:4px}
   .fl-drop input[type=range]{padding:0;margin:6px 0 0}
   .fl-status{font-size:13px;margin-top:8px;color:#aaa}
+  /* ---------- Productos en el inicio (orden de las filas) ---------- */
+  .oi-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+  .oi-tabs button{margin:0;background:#222;color:#ccc;border:1px solid var(--border);font-weight:600}
+  .oi-tabs button.on{background:var(--gold);color:#111;border-color:var(--gold)}
+  .oi-tabs button small{font-weight:400;opacity:.75}
+  .oi-help{font-size:12px;color:#888;margin:10px 0 8px}
+  .oi-list{display:flex;flex-direction:column;gap:6px;max-height:70vh;overflow:auto;padding-right:2px}
+  .oi-item{display:grid;grid-template-columns:22px 52px 44px 1fr auto;gap:10px;align-items:center;background:#111;border:1px solid var(--border);border-radius:8px;padding:6px 8px}
+  .oi-item.dragging{opacity:.4}
+  .oi-item.over{border-color:var(--gold)}
+  .oi-item.nostock{opacity:.5}
+  .oi-grip{cursor:grab;color:#666;font-size:18px;text-align:center;user-select:none}
+  .oi-pos{width:52px;margin:0;padding:6px 4px;text-align:center;font-weight:bold;color:var(--gold);font-size:14px}
+  .oi-item img{width:44px;height:44px;object-fit:contain;border-radius:6px;background:#fff}
+  .oi-info{min-width:0}
+  .oi-info b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .oi-info span{font-size:11px;color:#999}
+  .oi-actions{display:flex;gap:4px}
+  .oi-actions button{margin:0;padding:6px 9px;font-size:12px}
+  @media (max-width:700px){ .oi-item{grid-template-columns:44px 40px 1fr} .oi-grip{display:none} .oi-item img{width:40px;height:40px} .oi-actions{grid-column:1/-1;justify-content:flex-end} }
   /* ---------- Contacto y textos ---------- */
   .ct-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 18px;margin-top:10px}
   .ct-grid .full{grid-column:1/-1}
@@ -117,6 +137,20 @@
       <p class="muted" id="userEmail"></p>
     </div>
     <button class="secondary" id="btnLogout">Cerrar sesión</button>
+  </div>
+
+  <div class="card fl-card" id="ordenCard">
+    <div class="fl-head">
+      <div><b>Productos en el inicio</b> <span class="muted" style="margin:0">— elegí en qué orden aparecen los perfumes en cada fila del inicio.</span></div>
+      <button type="button" class="secondary" id="oiToggle">Mostrar</button>
+    </div>
+    <div id="oiBody" class="hidden">
+      <div class="oi-tabs" id="oiTabs"></div>
+      <p class="oi-help">Arrastralos con el mouse (desde ⋮⋮), usá las flechas, o escribí el número de posición que querés. "Primero" lo manda al frente. Se guarda solo.
+        Para sumar o sacar un perfume de una fila, cambiale la "Categoría" en su ficha.</p>
+      <div class="oi-list" id="oiList"></div>
+      <div class="fl-status" id="oiStatus"></div>
+    </div>
   </div>
 
   <div class="card fl-card" id="flyersCard">
@@ -415,6 +449,111 @@
     document.getElementById('flToggle').textContent = body.classList.contains('hidden') ? 'Mostrar' : 'Ocultar';
     if(!body.classList.contains('hidden')) cargarFlyers();
   };
+
+
+  // ---------- PRODUCTOS EN EL INICIO (orden de las filas) ----------
+  // cada fila del inicio muestra sus productos ordenados por el campo "orden" (de menor a mayor);
+  // acá se reordenan y se reescribe "orden" solo de los productos de esa fila
+  const OI_FILAS = [
+    { cat:'tendencias', titulo:'Tendencias' },
+    { cat:'ofertas', titulo:'Ofertas' },
+    { cat:'nuevos', titulo:'Nuevos ingresos' }
+  ];
+  let oiCat = 'tendencias', oiItems = [], oiTimer = null, oiDragId = null;
+
+  document.getElementById('oiToggle').onclick = () => {
+    const body = document.getElementById('oiBody');
+    body.classList.toggle('hidden');
+    document.getElementById('oiToggle').textContent = body.classList.contains('hidden') ? 'Mostrar' : 'Ocultar';
+    if(!body.classList.contains('hidden')) oiCargar();
+  };
+
+  // misma regla que la tienda: sin categoría cargada cuenta como "nuevos"
+  function oiCategoria(p){
+    const c = p.categoria;
+    return (c === 'ofertas' || c === 'tendencias' || c === 'ninguna') ? c : 'nuevos';
+  }
+  function oiConStock(p){
+    return Array.isArray(p.variantes) && p.variantes.length ? p.variantes.some(v => v.stock !== false) : p.stock !== false;
+  }
+  function oiFoto(p){
+    const v = Array.isArray(p.variantes) && p.variantes[0] || {};
+    return p.img || v.img || (Array.isArray(v.images) && v.images[0]) || (Array.isArray(p.images) && p.images[0]) || '';
+  }
+
+  function oiCargar(){
+    const cuenta = {};
+    Object.keys(productos).forEach(id => { const c = oiCategoria(productos[id]); cuenta[c] = (cuenta[c] || 0) + 1; });
+    const tabs = document.getElementById('oiTabs');
+    tabs.innerHTML = OI_FILAS.map(f => `<button type="button" data-cat="${f.cat}" class="${f.cat === oiCat ? 'on' : ''}">${f.titulo} <small>(${cuenta[f.cat] || 0})</small></button>`).join('');
+    tabs.querySelectorAll('button').forEach(b => b.onclick = () => { oiCat = b.dataset.cat; oiCargar(); });
+    // mismo orden que la tienda (orden ascendente; Firestore ya los trajo así)
+    oiItems = Object.keys(productos).filter(id => oiCategoria(productos[id]) === oiCat);
+    oiRender();
+  }
+
+  function oiRender(){
+    const el = document.getElementById('oiList');
+    if(!oiItems.length){ el.innerHTML = '<p class="muted" style="margin:0">No hay productos en esta fila.</p>'; return; }
+    const n = oiItems.length;
+    el.innerHTML = oiItems.map((id, i) => {
+      const p = productos[id], stock = oiConStock(p);
+      return `<div class="oi-item${stock ? '' : ' nostock'}" draggable="true" data-id="${flEsc(id)}">
+        <div class="oi-grip" title="Arrastrar">⋮⋮</div>
+        <input class="oi-pos" type="number" min="1" max="${n}" value="${i+1}" title="Posición">
+        <img src="${flEsc(oiFoto(p))}" alt="">
+        <div class="oi-info"><b>${p.topVentas ? '🔥 ' : ''}${flEsc(p.name)}</b><span>${flEsc(p.brand)}${stock ? '' : ' · sin stock (no se ve en el inicio)'}</span></div>
+        <div class="oi-actions">
+          <button type="button" class="secondary oi-first" ${i===0?'disabled':''} title="Mandar al primer lugar">⇈ Primero</button>
+          <button type="button" class="secondary oi-up" ${i===0?'disabled':''} title="Subir">↑</button>
+          <button type="button" class="secondary oi-down" ${i===n-1?'disabled':''} title="Bajar">↓</button>
+        </div>
+      </div>`;
+    }).join('');
+    el.querySelectorAll('.oi-item').forEach(row => {
+      const id = row.dataset.id, i = () => oiItems.indexOf(id);
+      row.querySelector('.oi-first').onclick = () => oiMover(i(), 0);
+      row.querySelector('.oi-up').onclick = () => oiMover(i(), i() - 1);
+      row.querySelector('.oi-down').onclick = () => oiMover(i(), i() + 1);
+      row.querySelector('.oi-pos').onchange = e => oiMover(i(), Math.max(1, Math.min(n, parseInt(e.target.value, 10) || 1)) - 1);
+      row.addEventListener('dragstart', e => { oiDragId = id; row.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; });
+      row.addEventListener('dragend', () => { oiDragId = null; row.classList.remove('dragging'); el.querySelectorAll('.over').forEach(x => x.classList.remove('over')); });
+      row.addEventListener('dragover', e => { if(oiDragId && oiDragId !== id){ e.preventDefault(); row.classList.add('over'); } });
+      row.addEventListener('dragleave', () => row.classList.remove('over'));
+      row.addEventListener('drop', e => { e.preventDefault(); if(oiDragId && oiDragId !== id) oiMover(oiItems.indexOf(oiDragId), i()); });
+    });
+  }
+
+  function oiMover(de, a){
+    if(de < 0 || a < 0 || a >= oiItems.length || de === a) return;
+    const [id] = oiItems.splice(de, 1);
+    oiItems.splice(a, 0, id);
+    oiRender();
+    document.getElementById('oiStatus').textContent = 'Guardando…';
+    clearTimeout(oiTimer);
+    oiTimer = setTimeout(oiGuardar, 500);
+  }
+
+  async function oiGuardar(){
+    const lista = oiItems.slice();
+    // números seguidos, arrancando del menor que ya tenía la fila (así no se mezcla con el resto del catálogo)
+    const base = Math.max(0, Math.min(...lista.map(id => Number(productos[id].orden) || 0)));
+    const batch = db.batch();
+    let cambios = 0;
+    lista.forEach((id, i) => {
+      if(productos[id].orden !== base + i){
+        batch.update(db.collection('productos').doc(id), { orden: base + i });
+        productos[id].orden = base + i;
+        cambios++;
+      }
+    });
+    try{
+      if(cambios) await batch.commit();
+      document.getElementById('oiStatus').textContent = 'Orden guardado ✔ — recargá la tienda para verlo.';
+    }catch(e){
+      document.getElementById('oiStatus').textContent = 'Error al guardar: ' + e.message;
+    }
+  }
 
   // ---------- CONTACTO Y TEXTOS ----------
   // se guardan en productos/_contacto (sin campo "orden", así no aparece como producto); la página los lee al cargar
