@@ -1289,6 +1289,20 @@
     .pm-qty{ height:50px; } .pm-qty-btn{ height:48px; } .pm-add-btn, .pm-add-btn.add-cart-btn{ height:50px; }
   }
 
+  /* ---------- ficha del producto: fondo "arena" único (foto + información) ---------- */
+  .product-modal{ --pm-bg:#ebe6df; --pm-spot:#fbf9f6; }
+  .pm-panel{ background:var(--pm-bg); }
+  .pm-gallery, .pm-info{ background:transparent; }
+  /* la luz va en cada foto de estudio (el blanco de la foto se funde por multiply) y termina en el mismo color del fondo */
+  .pm-slide.studio{ background:radial-gradient(60% 55% at 50% 42%, var(--pm-spot) 0%, var(--pm-bg) 100%); }
+  .pm-buy-row{ background:linear-gradient(to bottom, rgba(235,230,223,0), var(--pm-bg) 26%); border-top-color:rgba(10,9,8,.06); }
+  .pm-close, .pm-arrow{ background:rgba(255,255,255,.6); }
+  .pm-seg, .pm-qty{ background:rgba(255,255,255,.45); }
+  .pm-info h3{ text-shadow:0 1px 0 rgba(255,255,255,.9), 0 10px 22px rgba(60,40,20,.22); }
+  /* diseñador: sin subrayado, se agranda un poco al pasar o tocar */
+  #pmBrand.clickable{ display:inline-block; text-decoration:none; transform-origin:left center; transition:transform .28s cubic-bezier(.2,.8,.2,1), color .2s ease; }
+  #pmBrand.clickable:hover, #pmBrand.clickable:active{ text-decoration:none; transform:scale(1.1); color:var(--black); }
+
   @media (prefers-reduced-motion: reduce){
     *{ animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; scroll-behavior:auto !important; }
   }
@@ -1314,7 +1328,7 @@
 <script>
   /* Versión de la página: si el navegador tiene guardada una versión vieja, se recarga sola (una vez) mientras se ve el logo.
      Al subir cambios, se sube también version.json con el mismo número que MP_BUILD. */
-  window.MP_BUILD = '2026-09-28e';
+  window.MP_BUILD = '2026-09-30a';
   window.__mpVersionOK = false;
   (function(){
     function ok(){ window.__mpVersionOK = true; }
