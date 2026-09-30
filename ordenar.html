@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>M Perfumerie — Ordenar secciones</title>
+<style>
+  :root{ --black:#0a0908; --gold:#c9974e; --bg:#faf8f5; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; font-family:system-ui, -apple-system, "Segoe UI", sans-serif; background:var(--bg); color:var(--black); }
+  .wrap{ max-width:900px; margin:0 auto; padding:32px 16px 80px; }
+  h1{ font-size:24px; margin:0 0 6px; }
+  p.sub{ color:rgba(10,9,8,.6); margin:0 0 24px; line-height:1.5; }
+  .box{ background:#fff; border:1px solid rgba(10,9,8,.08); border-radius:16px; padding:20px; margin-bottom:18px; }
+  input{ width:100%; padding:12px 14px; border:1px solid rgba(10,9,8,.15); border-radius:10px; font-size:15px; margin-bottom:10px; }
+  button{ font:inherit; font-weight:700; padding:13px 22px; border-radius:999px; border:none; cursor:pointer; background:var(--black); color:#fff; }
+  button.gold{ background:linear-gradient(135deg,#8a6428,#c9974e 45%,#f0ce95 65%,#c9974e); color:var(--black); }
+  button.ghost{ background:none; border:1px solid rgba(10,9,8,.2); color:var(--black); }
+  button:disabled{ opacity:.4; cursor:not-allowed; }
+  .hidden{ display:none !important; }
+  .err{ color:#b3261e; font-size:14px; }
+  .ok{ color:#1e7b34; font-weight:700; }
+  h2{ font-size:16px; margin:0 0 10px; display:flex; align-items:center; gap:8px; }
+  h2 small{ font-weight:400; color:rgba(10,9,8,.5); }
+  ol, ul{ margin:0; padding-left:22px; line-height:1.7; font-size:14px; }
+  li.rm{ color:rgba(10,9,8,.5); text-decoration:line-through; }
+  .actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:8px; }
+  #log{ font-size:14px; line-height:1.6; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Ordenar Nuevos ingresos, Tendencias y 🔥</h1>
+  <p class="sub">Esta página acomoda las secciones del inicio según la investigación de lanzamientos y tendencias (septiembre 2026).
+    Las <b>Ofertas</b> no se tocan. Antes de cambiar nada se guarda una copia de cómo estaba todo, y con "Deshacer" se vuelve atrás.</p>
+
+  <div class="box" id="loginBox">
+    <h2>Entrá con tu usuario del panel</h2>
+    <input id="loginEmail" type="email" placeholder="Email" autocomplete="username">
+    <input id="loginPass" type="password" placeholder="Contraseña" autocomplete="current-password">
+    <button id="btnLogin">Entrar</button>
+    <p class="err" id="loginError"></p>
+  </div>
+
+  <div id="panel" class="hidden">
+    <div class="box" id="preview"><p>Cargando productos…</p></div>
+    <div class="box">
+      <div class="actions">
+        <button class="gold" id="btnApply" disabled>Aplicar cambios</button>
+        <button class="ghost" id="btnUndo" disabled>Deshacer (volver a como estaba)</button>
+      </div>
+      <p id="log"></p>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDBF1-sWewJFajphKUhBBc1CVRaITsk4Ho",
+    authDomain: "m-perfumerie.firebaseapp.com",
+    projectId: "m-perfumerie",
+    storageBucket: "m-perfumerie.firebasestorage.app",
+    messagingSenderId: "853092893101",
+    appId: "1:853092893101:web:19a836b74ae0393f78e124",
+    measurementId: "G-L670S5FL0E"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+  const RESPALDO = db.collection('productos').doc('_respaldo_orden');
+
+  // Nuevos ingresos: del lanzamiento más reciente al más viejo
+  const NUEVOS = [
+    'sarkany-dragoness',                          // Sarkany Dragoness EDP (ago 2026)
+    'lancome-la-vie-est-belle-l-elixir-cherry',   // Lancôme La Vie Est Belle L'Elixir Very Cherry (may 2026)
+    'xlS8xtw155d57ve0Vr38',                       // CK One Night Essence (abr 2026)
+    'dolce-gabbana-light-blue-pour-homme-edp',    // D&G Light Blue Pour Homme EDP (abr 2026)
+    'Q46QyqCjdkR5gkVjUVNo',                       // JPG Le Beau Narcisse (mar 2026)
+    'yU3gQAIXITkZLVPmMujq',                       // JPG La Belle Rosea (mar 2026)
+    '8PkftMY7hQGzaSmE0Zzz',                       // JPG Le Male in Blue (2026)
+    'jpg-scandal-elixir-parfum-para-ella',        // JPG Scandal Elixir (2026)
+    'jpg-scandal-elixir-pour-homme-parfum-para-el', // JPG Scandal Pour Homme Elixir (2026)
+    'WgKQ657I7o2kZCT8hcoy',                       // Rabanne Invictus Elixir (2026)
+    'Q2DLE3q2B6sdMhHzuwHp',                       // Rabanne One Million Night Elixir (2026)
+    'm4Dh3aALEmNypyIewKmA',                       // CK Euphoria Solar Elixir (2026)
+    'uC10BblwxbcSYm9rBAqH',                       // CK Euphoria Magnetic Elixir (2026)
+    'VimwzalPgEb5H4GgbAls',                       // CK Euphoria Bold Elixir (2026)
+    'GApQyOHALHKONDtJ3plY',                       // Ralph Lauren Polo 67 Extreme (2026)
+    'lWRy9RJPwrVhMLognZGY',                       // Lattafa Khamrah Waha (2026)
+    'xccofnruasUY1IkLdbv3',                       // Cher Dieciocho Rocket (2026)
+    'mugler-alien-pulp-edp',                      // Mugler Alien Pulp (fines 2025)
+    'dior-addict-peachy-glow-edp',                // Dior Addict Peachy Glow (fines 2025)
+    'dior-addict-purple-glow-edp',                // Dior Addict Purple Glow (fines 2025)
+    'dior-addict-rosy-glow-edp',                  // Dior Addict Rosy Glow (fines 2025)
+    'rabanne-fame-in-love-parfum-elixir',         // Rabanne Fame in Love (fines 2025)
+    'rabanne-phantom-in-red-parfum-elixir'        // Rabanne Phantom in Red (fines 2025)
+  ];
+
+  // Tendencias: lo más vendido/buscado ahora, intercalando hombre y mujer
+  const TENDENCIAS = [
+    'LLBLzUtw6Uo2keTk0Qqo',                 // Armaf Club de Nuit Intense
+    'cher-dieciocho-edp',                   // Cher Dieciocho
+    'dior-sauvage-edp',                     // Dior Sauvage EDP
+    'laurent-ysl-libre-edp',                // YSL Libre
+    'irf13FGJ6GRpM1bGfC30',                 // Lattafa Asad
+    '0h2EnxQWHGVbudclBuBE',                 // Lattafa Yara Candy
+    'n7ZOCMgMkTefH4Vovaic',                 // Azzaro The Most Wanted Parfum
+    '67ewWKHdBZK3Na2pH04y',                 // D&G Light Blue Pour Femme EDT
+    'jean-paul-gaultier-le-male-elixir-edp',// JPG Le Male Elixir
+    'givenchy-l-interdit-edp',              // Givenchy L'Interdit
+    '9e7To7SzJPFkQLkR5EXP',                 // Armani Stronger With You Intensely
+    'rabanne-fame-edp',                     // Rabanne Fame
+    'Tjeg3Y6le5d4ZnxtU2O9',                 // Lattafa Khamrah
+    'carolina-herrera-good-girl-edp',       // CH Good Girl
+    '5IgHC96yYwYBaVQRGFkZ',                 // Azzaro Wanted by Night
+    'laurent-ysl-black-opium-edp',          // YSL Black Opium
+    'valentino-born-in-roma-uomo-edt',      // Valentino Born in Roma Uomo
+    'kenzo-flower-edp',                     // Kenzo Flower
+    'afnan-9-am-dive',                      // Afnan 9 AM Dive
+    'xVqsPTYDxJMC53zeWndo',                 // Lattafa Khamrah Qahwa
+    '0lkk8QClnEvLIVbw18k9',                 // Azzaro Chrome Parfum
+    'JsQwH4LTx1sgEAQWKGAj'                  // CH 212 VIP Black Cab
+  ];
+
+  // Fueguito: de temporada (arranca primavera-verano)
+  const FUEGO = [
+    'dolce-gabbana-light-blue-pour-homme-edp',
+    'afnan-9-am-dive',
+    'lWRy9RJPwrVhMLognZGY',
+    'jpg-scandal-elixir-parfum-para-ella',
+    'jpg-scandal-elixir-pour-homme-parfum-para-el',
+    'yU3gQAIXITkZLVPmMujq',
+    'FRI1OzXc82iyMXXLxGyO',
+    'mugler-alien-pulp-edp',
+    'dior-addict-peachy-glow-edp',
+    'xccofnruasUY1IkLdbv3'
+  ];
+
+  const esc = t => String(t || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  let productos = {};
+  let cambios = [];
+
+  function objetivo(id, p){
+    const t = { categoria: p.categoria, topVentas: !!p.topVentas, orden: p.orden };
+    if(p.categoria === 'ofertas') { t.topVentas = FUEGO.includes(id); return t; }
+    const n = NUEVOS.indexOf(id), k = TENDENCIAS.indexOf(id);
+    if(n >= 0){ t.categoria = 'nuevos'; t.orden = 1 + n; }
+    else if(k >= 0){ t.categoria = 'tendencias'; t.orden = 101 + k; }
+    else if(p.categoria === 'nuevos' || p.categoria === 'tendencias'){ t.categoria = 'ninguna'; }
+    t.topVentas = FUEGO.includes(id);
+    return t;
+  }
+  const nombre = p => `${esc(p.brand)} · ${esc(p.name)}`;
+
+  async function cargar(){
+    const snap = await db.collection('productos').get();
+    productos = {};
+    snap.forEach(d => { if(!d.id.startsWith('_')) productos[d.id] = d.data(); });
+    const faltan = [...NUEVOS, ...TENDENCIAS, ...FUEGO].filter(id => !productos[id]);
+    cambios = [];
+    for(const id in productos){
+      const p = productos[id], t = objetivo(id, p), upd = {};
+      if(t.categoria !== p.categoria) upd.categoria = t.categoria;
+      if(t.topVentas !== !!p.topVentas) upd.topVentas = t.topVentas;
+      if(t.orden !== p.orden) upd.orden = t.orden;
+      if(Object.keys(upd).length) cambios.push({ id, upd, antes: { categoria: p.categoria ?? null, topVentas: !!p.topVentas, orden: p.orden ?? null } });
+    }
+    const salen = cat => Object.keys(productos).filter(id => productos[id].categoria === cat && objetivo(id, productos[id]).categoria !== cat);
+    const fuegoSale = Object.keys(productos).filter(id => productos[id].topVentas && !FUEGO.includes(id));
+    document.getElementById('preview').innerHTML = `
+      <h2>🆕 Nuevos ingresos <small>(${NUEVOS.length}, del más nuevo al más viejo)</small></h2>
+      <ol>${NUEVOS.filter(id => productos[id]).map(id => `<li>${nombre(productos[id])}</li>`).join('')}</ol>
+      ${salen('nuevos').length ? `<p><small>Salen de Nuevos:</small></p><ul>${salen('nuevos').map(id => `<li class="rm">${nombre(productos[id])}</li>`).join('')}</ul>` : ''}
+      <br><h2>✨ Tendencias <small>(${TENDENCIAS.length})</small></h2>
+      <ol>${TENDENCIAS.filter(id => productos[id]).map(id => `<li>${nombre(productos[id])}</li>`).join('')}</ol>
+      ${salen('tendencias').length ? `<p><small>Salen de Tendencias:</small></p><ul>${salen('tendencias').map(id => `<li class="rm">${nombre(productos[id])}</li>`).join('')}</ul>` : ''}
+      <br><h2>🔥 Fueguito <small>(${FUEGO.length})</small></h2>
+      <ul>${FUEGO.filter(id => productos[id]).map(id => `<li>${nombre(productos[id])}</li>`).join('')}</ul>
+      ${fuegoSale.length ? `<p><small>Pierden el fueguito:</small></p><ul>${fuegoSale.map(id => `<li class="rm">${nombre(productos[id])}</li>`).join('')}</ul>` : ''}
+      ${faltan.length ? `<p class="err">No se encontraron estos productos (se saltean): ${faltan.map(esc).join(', ')}</p>` : ''}
+      <p><b>${cambios.length}</b> productos para actualizar. Las Ofertas no cambian.</p>`;
+    document.getElementById('btnApply').disabled = !cambios.length;
+    document.getElementById('btnApply').textContent = cambios.length ? 'Aplicar cambios' : 'Ya está todo aplicado ✓';
+    const r = await RESPALDO.get();
+    document.getElementById('btnUndo').disabled = !(r.exists && r.data().items && r.data().items.length);
+  }
+
+  async function escribir(lista){
+    for(let i = 0; i < lista.length; i += 400){
+      const batch = db.batch();
+      lista.slice(i, i + 400).forEach(c => batch.set(db.collection('productos').doc(c.id), c.upd, { merge:true }));
+      await batch.commit();
+    }
+  }
+
+  document.getElementById('btnApply').onclick = async () => {
+    const log = document.getElementById('log'), btn = document.getElementById('btnApply');
+    btn.disabled = true; log.textContent = 'Guardando copia de cómo estaba…';
+    try{
+      await RESPALDO.set({ items: cambios.map(c => ({ id: c.id, antes: c.antes })), fecha: firebase.firestore.FieldValue.serverTimestamp() });
+      log.textContent = 'Actualizando productos…';
+      await escribir(cambios);
+      log.innerHTML = `<span class="ok">¡Listo! Se actualizaron ${cambios.length} productos.</span> Ya se ve en mperfumerie.com.ar (recargá la página).`;
+      await cargar();
+    }catch(e){ log.innerHTML = `<span class="err">Error: ${esc(e.message)}</span>`; btn.disabled = false; }
+  };
+
+  document.getElementById('btnUndo').onclick = async () => {
+    if(!confirm('¿Volver Nuevos, Tendencias y fueguitos a como estaban antes de aplicar?')) return;
+    const log = document.getElementById('log');
+    try{
+      const r = await RESPALDO.get();
+      const del = firebase.firestore.FieldValue.delete();
+      const lista = r.data().items.map(it => ({ id: it.id, upd: {
+        categoria: it.antes.categoria ?? del, topVentas: it.antes.topVentas, orden: it.antes.orden ?? del } }));
+      await escribir(lista);
+      await RESPALDO.set({ items: [], deshecho: firebase.firestore.FieldValue.serverTimestamp() });
+      log.innerHTML = `<span class="ok">Listo, quedó todo como estaba.</span>`;
+      await cargar();
+    }catch(e){ log.innerHTML = `<span class="err">Error: ${esc(e.message)}</span>`; }
+  };
+
+  document.getElementById('btnLogin').onclick = async () => {
+    try{ await auth.signInWithEmailAndPassword(document.getElementById('loginEmail').value, document.getElementById('loginPass').value); }
+    catch(e){ document.getElementById('loginError').textContent = 'No se pudo iniciar sesión: ' + e.message; }
+  };
+  auth.onAuthStateChanged(user => {
+    document.getElementById('loginBox').classList.toggle('hidden', !!user);
+    document.getElementById('panel').classList.toggle('hidden', !user);
+    if(user) cargar().catch(e => { document.getElementById('preview').innerHTML = `<p class="err">Error: ${esc(e.message)}</p>`; });
+  });
+</script>
+</body>
+</html>
