@@ -1206,9 +1206,9 @@
   .ing-name{ opacity:0; transition:opacity .4s ease .3s; }
   .pm-ing-list.go .ing-name{ opacity:1; }
   .pm-notes{ list-style:none; position:relative; padding-left:22px; display:flex; flex-direction:column; gap:16px; margin:2px 0 0; }
-  .pm-notes::before{ content:""; position:absolute; left:4px; top:6px; bottom:6px; width:1px; background:rgba(10,9,8,.1); }
+  .pm-notes::before{ content:""; position:absolute; left:4px; top:6px; bottom:6px; width:1px; background:linear-gradient(var(--gold-1), rgba(201,151,78,.2)); }
   .pm-notes li{ position:relative; }
-  .pm-notes li::before{ content:""; position:absolute; left:-22px; top:3px; width:9px; height:9px; border-radius:50%; background:#fff; border:1.5px solid var(--black); }
+  .pm-notes li::before{ content:""; position:absolute; left:-22px; top:3px; width:9px; height:9px; border-radius:50%; background:var(--gold-grad); border:1.5px solid var(--gold-1); box-shadow:0 0 0 3px rgba(201,151,78,.16); }
   .pm-notes .k{ font-size:10px; font-weight:800; letter-spacing:.16em; text-transform:uppercase; color:rgba(10,9,8,.45); }
   .pm-notes .v{ font-size:13.5px; line-height:1.5; margin-top:2px; color:var(--black); font-weight:400; }
   #pmDescripcion .notas-value{ font-size:13.5px; line-height:1.65; color:var(--black); }
@@ -1234,7 +1234,7 @@
   .pm-add-ok path{ stroke-dasharray:24; stroke-dashoffset:24; }
   .pm-add-btn.is-done .pm-add-ok path{ animation:pmTick .5s ease .15s forwards; }
   @keyframes pmTick{ to{ stroke-dashoffset:0; } }
-  .pm-buy-row .pm-qty-hint{ position:absolute; left:44px; bottom:100%; top:auto; margin:0 0 6px; background:var(--black); color:#fff; padding:3px 9px; border-radius:999px; }
+  .pm-buy-row .pm-qty-hint{ position:absolute; left:44px; bottom:100%; top:auto; margin:0 0 8px; height:auto; line-height:1.4; white-space:nowrap; z-index:4; background:var(--black); color:#fff; padding:4px 11px; border-radius:999px; }
 
   /* el contenido aparece escalonado cuando el recuadro ya se armó */
   .pm-info > *, .pm-thumbs, .pm-counter, .pm-close, .pm-arrow{ opacity:0; transition:opacity .45s ease, transform .6s cubic-bezier(.2,.8,.2,1); }
