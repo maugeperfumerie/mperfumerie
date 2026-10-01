@@ -3621,7 +3621,7 @@
           const unit = parsePrice(v.priceNew || v.price);
           msg += `• ${p.name} (${c.ml || ''}) (x${c.qty}) — ${money(unit * c.qty)}\n`;
         });
-        msg += `\nTotal: ${money(total)}\n\nhttps://mperfumerie.com.ar\n\n¡Quiero terminar mi compra!`;
+        msg += `\nTotal: ${money(total)}\n\n¿Qué medios de pago tienen y cómo coordinamos el envío?\n\nhttps://mperfumerie.com.ar`;
         openWhatsappConfirm('https://wa.me/' + (window.__mpWaNum || '5493416052132') + '?text=' + encodeURIComponent(msg));
       });
     }
