@@ -232,6 +232,26 @@
   }
   #pmBrand.clickable{ cursor:pointer; transition:color .2s ease; }
   #pmBrand.clickable:hover, #pmBrand.clickable:active{ color:rgba(10,9,8,0.75); }
+  .pm-meta-row{ flex-wrap:wrap; }
+  .pm-share{ margin-left:auto; display:inline-flex; align-items:center; gap:6px; padding:6px 12px 6px 10px; border-radius:999px; border:1px solid rgba(10,9,8,.12); background:rgba(255,255,255,.45); color:rgba(10,9,8,.6); font-family:var(--sans); font-size:10.5px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; cursor:pointer; transition:color .2s ease, border-color .2s ease, background .2s ease, transform .15s ease; }
+  .pm-share svg{ width:14px; height:14px; flex-shrink:0; }
+  .pm-share:hover{ color:var(--black); border-color:rgba(10,9,8,.3); }
+  .pm-share:active{ transform:scale(.95); }
+  .pm-share.is-done{ color:var(--black); border-color:var(--black); }
+  .search-all{ display:flex; align-items:center; gap:8px; width:100%; padding:12px 14px; margin:0 0 6px; border:0; border-bottom:1px solid rgba(10,9,8,.08); background:none; cursor:pointer; font-family:var(--sans); font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--black); text-align:left; }
+  .search-all span{ font-weight:600; color:rgba(10,9,8,.45); letter-spacing:.04em; }
+  .search-all svg{ width:16px; height:16px; margin-left:auto; }
+  .search-all:hover{ background:var(--white-dim); }
+  #searchInput::-webkit-search-cancel-button{ display:none; }
+  @media (max-width:680px){
+    .pm-meta-row{ flex-wrap:nowrap; min-width:0; }
+    .pm-meta-row > span{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .pm-share{ flex-shrink:0; width:34px; height:34px; padding:0; justify-content:center; }
+    .pm-share svg{ width:16px; height:16px; }
+    .pm-share .pm-share-txt{ display:none; }
+    .pm-share.is-done{ width:auto; padding:0 12px; }
+    .pm-share.is-done .pm-share-txt{ display:inline; }
+  }
   .pm-tabs-row{ display:flex; align-items:center; gap:16px; margin-bottom:10px; flex-wrap:wrap; row-gap:6px; }
   .pm-tab-label{
     background:none; border:none; padding:0; margin:0; cursor:pointer; font-family:var(--sans);
@@ -1328,7 +1348,7 @@
 <script>
   /* Versión de la página: si el navegador tiene guardada una versión vieja, se recarga sola (una vez) mientras se ve el logo.
      Al subir cambios, se sube también version.json con el mismo número que MP_BUILD. */
-  window.MP_BUILD = '2026-09-30a';
+  window.MP_BUILD = '2026-10-10a';
   window.__mpVersionOK = false;
   (function(){
     function ok(){ window.__mpVersionOK = true; }
@@ -1435,7 +1455,7 @@
   <div class="search-box-wrap">
     <div class="search-input-row">
       <svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#0a0908" stroke-width="1.6"/><line x1="21" y1="21" x2="16.5" y2="16.5" stroke="#0a0908" stroke-width="1.6" stroke-linecap="round"/></svg>
-      <input type="text" id="searchInput" placeholder="¿Qué buscás?" autocomplete="off">
+      <input type="search" id="searchInput" placeholder="¿Qué buscás?" autocomplete="off" enterkeyhint="search">
       <button class="search-close" id="searchClose" aria-label="Cerrar búsqueda">
         <svg viewBox="0 0 24 24" fill="none"><line x1="5" y1="5" x2="19" y2="19" stroke="#0a0908" stroke-width="1.6" stroke-linecap="round"/><line x1="19" y1="5" x2="5" y2="19" stroke="#0a0908" stroke-width="1.6" stroke-linecap="round"/></svg>
       </button>
@@ -1475,6 +1495,10 @@
       <div class="pm-meta-row">
         <span id="pmChip"></span>
         <span id="pmBrand"></span>
+        <button type="button" class="pm-share" id="pmShare" aria-label="Compartir este perfume">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 15V4M7.5 8.5L12 4l4.5 4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 11H6.5A1.5 1.5 0 0 0 5 12.5v6A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5v-6a1.5 1.5 0 0 0-1.5-1.5H16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+          <span class="pm-share-txt">Compartir</span>
+        </button>
       </div>
       <h3 id="pmName"></h3>
       <div class="pm-sub" id="pmSub"></div>
@@ -2569,9 +2593,41 @@
     el.classList.add('page-enter');
   }
 
+  // ---------- LINKS PARA COMPARTIR (cada marca, perfume y búsqueda tiene su propia dirección) ----------
+  // ?marca=yves-saint-laurent  ·  ?perfume=yves-saint-laurent-libre-edp  ·  ?buscar=libre  ·  ?ver=ofertas  ·  ?genero=mujer
+  function mpSlug(s){ return normTxt(s).replace(/ /g, '-'); }
+  const mpPerfumeSlug = {}, mpSlugPerfume = {};
+  (function(){
+    const ids = Object.keys(allProducts).sort();               // orden fijo: el link de cada perfume no cambia al reordenar la tienda
+    ids.forEach(id => {
+      const p = allProducts[id], marca = normTxt(p.brand), nombre = normTxt(p.name);
+      let base = mpSlug(marca && !(' ' + nombre + ' ').startsWith(' ' + marca + ' ') ? p.brand + ' ' + p.name : p.name) || id.toLowerCase();
+      let sl = base;
+      if(mpSlugPerfume[sl]) sl = base + '-' + id.slice(0, 5).toLowerCase();
+      mpPerfumeSlug[id] = sl; mpSlugPerfume[sl] = id;
+    });
+  })();
+  const MP_VER = {'todos':'todos-productos', 'marcas':'marcas', 'perfumeria':'perfumeria', 'maquillajes':'maquillajes'};
+  function mpUrlFor(view){
+    const base = location.pathname;
+    if(!view) return base;
+    const q = (k, v) => base + '?' + k + '=' + encodeURIComponent(v);
+    switch(view.type){
+      case 'section': { const k = Object.keys(MP_VER).find(k => MP_VER[k] === view.id); return k ? q('ver', k) : base; }
+      case 'category': return q('ver', view.cat);
+      case 'genero': return view.genero ? q('genero', mpSlug(view.genero)) : q('ver', 'todos');
+      case 'brand-list': return q('ver', 'marcas');
+      case 'brand-results': return q('marca', mpSlug(view.brand));
+      case 'product': return mpPerfumeSlug[view.id] ? q('perfume', mpPerfumeSlug[view.id]) : base;
+      case 'search': return q('buscar', view.q);
+      default: return base;
+    }
+  }
+  window.mpUrlFor = mpUrlFor;
+
   function saveViewInHistory(view){
     const state = {...(history.state || {}), mperfView:view};
-    history.pushState(state, '', location.href);
+    history.pushState(state, '', mpUrlFor(view));
   }
   history.replaceState({...history.state, mperfView:{type:'home'}}, '', location.href);
 
@@ -2616,6 +2672,29 @@
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
     playPageEnter(categoriaFullSection);
   }
+  function buscarProductos(q){
+    const palabras = normTxt(q).split(' ').filter(Boolean);
+    if(!palabras.length) return [];
+    return Object.values(allProducts)
+      .filter(p => { const t = ' ' + normTxt([p.brand, p.name, p.chip, p.genero].join(' ')) + ' '; return palabras.every(w => t.includes(w)); })
+      .sort((a, b) => (a.stock === false ? 1 : 0) - (b.stock === false ? 1 : 0));
+  }
+  function openBusqueda(q, addHistory=true){
+    q = String(q || '').trim();
+    if(!q) return;
+    if(addHistory) saveViewInHistory({type:'search', q});
+    const items = buscarProductos(q);
+    showHomeFlow(false);
+    standaloneSectionIds.forEach(sid => { const el = document.getElementById(sid); if(el) el.style.display = 'none'; });
+    categoriaFullTitle.textContent = `Resultados para “${q}”`;
+    const vacio = document.createElement('div');
+    vacio.className = 'catalog-empty'; vacio.style.gridColumn = '1/-1';
+    vacio.textContent = `No encontramos productos para “${q}”.`;
+    categoriaFullGrid.innerHTML = items.length ? items.map(cardHtml).join('') : vacio.outerHTML;
+    categoriaFullSection.classList.add('open');
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    playPageEnter(categoriaFullSection);
+  }
   document.querySelectorAll('.row-more-link').forEach(btn => {
     btn.addEventListener('click', () => openCategoriaFull(btn.dataset.cat));
   });
@@ -2656,6 +2735,7 @@
       return;
     }
     if(view.type === 'product') { openProductModal(view.id, false); return; }
+    if(view.type === 'search') { openBusqueda(view.q, false); return; }
     closeProductModal();
   });
 
@@ -2809,10 +2889,11 @@
       (p.name && p.name.toLowerCase().includes(q)) || (p.brand && p.brand.toLowerCase().includes(q))
     ).slice(0, 20);
     if(!results.length){
-      searchResultsEl.innerHTML = `<div class="search-empty">No se encontraron productos para "${q}".</div>`;
+      searchResultsEl.innerHTML = `<div class="search-empty">No se encontraron productos para "${q.replace(/[&<>"']/g, '')}".</div>`;
       return;
     }
-    searchResultsEl.innerHTML = results.map(p => `
+    const total = buscarProductos(q).length;
+    searchResultsEl.innerHTML = (total ? `<button type="button" class="search-all" id="searchAllBtn">Ver todos los resultados <span>${total}</span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>` : '') + results.map(p => `
       <button type="button" class="search-result-item" data-id="${p.id}">
         <img src="${p.img || (p.images && p.images[0]) || ''}" alt="${p.name}">
         <div class="search-result-info">
@@ -2829,6 +2910,14 @@
     });
   }
   searchInput.addEventListener('input', () => runSearch(searchInput.value));
+  function buscarTodo(){
+    const q = searchInput.value.trim();
+    if(!q) return;
+    closeSearch();
+    openBusqueda(q);
+  }
+  searchInput.addEventListener('keydown', (e) => { if(e.key === 'Enter'){ e.preventDefault(); searchInput.blur(); buscarTodo(); } });
+  searchResultsEl.addEventListener('click', (e) => { if(e.target.closest('#searchAllBtn')) buscarTodo(); });
 
 
   // ---------- LISTADO DE MARCAS Y RESULTADOS POR MARCA ----------
@@ -3438,12 +3527,27 @@
     pmLastSource = null;   // se va a otra página: el recuadro se cierra sin volver a la miniatura
     closeProductModal();
     if(history.state && history.state.mperfView && history.state.mperfView.type === 'product'){
-      history.replaceState({...history.state,mperfView:{type:'section',id:'marcas'}},'',location.href);
+      history.replaceState({...history.state,mperfView:{type:'section',id:'marcas'}},'',mpUrlFor({type:'section',id:'marcas'}));
     }
     openStandaloneSection('marcas', false);
     showBrandResults(brand);
   });
   document.getElementById('pmOverlay').addEventListener('click', closeProductModalWithHistory);
+  // compartir: en el celu abre el menú de compartir del teléfono; en la compu copia el link
+  document.getElementById('pmShare').addEventListener('click', async () => {
+    const p = pmCurrentProduct;
+    if(!p) return;
+    const url = location.origin + mpUrlFor({type:'product', id:p.id});
+    const btn = document.getElementById('pmShare'), txt = btn.querySelector('.pm-share-txt');
+    const avisar = msg => { txt.textContent = msg; btn.classList.add('is-done'); clearTimeout(btn._t); btn._t = setTimeout(() => { txt.textContent = 'Compartir'; btn.classList.remove('is-done'); }, 1800); };
+    const titulo = [p.brand, p.name].filter(Boolean).join(' ');
+    if(navigator.share && matchMedia('(pointer:coarse)').matches){
+      try { await navigator.share({ title: titulo + ' | M Perfumerie', url }); return; }
+      catch(e){ if(e && e.name === 'AbortError') return; }
+    }
+    try { await navigator.clipboard.writeText(url); avisar('Link copiado'); }
+    catch(e){ window.prompt('Copiá el link de este perfume:', url); }
+  });
   document.getElementById('pmArrowPrev').addEventListener('click', () => pmShowImage(pmImageIndex - 1));
   document.getElementById('pmArrowNext').addEventListener('click', () => pmShowImage(pmImageIndex + 1));
 
@@ -3657,6 +3761,52 @@
   document.getElementById('cartOverlay').addEventListener('click', closeCart);
 
   updateCartUI();
+
+  // ---------- ENTRAR DESDE UN LINK COMPARTIDO ----------
+  (function abrirDesdeLink(){
+    const sp = new URLSearchParams(location.search);
+    const perfume = sp.get('perfume'), marca = sp.get('marca'), buscar = sp.get('buscar'), ver = sp.get('ver'), genero = sp.get('genero');
+    if(!(perfume || marca || buscar || ver || genero)) return;
+    // la página de abajo queda como "inicio": así "volver" o cerrar lleva al inicio de la tienda y no afuera
+    history.replaceState({...(history.state || {}), mperfView:{type:'home'}}, '', mpUrlFor({type:'home'}));
+    const ALIAS = {'ysl':'Yves Saint Laurent', 'ch':'Carolina Herrera', 'jpg':'Jean Paul Gaultier', 'dg':'Dolce & Gabbana', 'dyg':'Dolce & Gabbana', 'ck':'Calvin Klein', 'pr':'Paco Rabanne'};
+    function marcaDesdeSlug(sl){
+      sl = mpSlug(String(sl).replace(/-/g, ' '));
+      if(ALIAS[sl.replace(/-/g, '')]) return ALIAS[sl.replace(/-/g, '')];
+      const todas = marcas.map(m => m.key).concat(Object.values(allProducts).map(p => p.brand).filter(Boolean));
+      return todas.find(b => mpSlug(b) === sl) || String(sl).replace(/-/g, ' ');
+    }
+    function perfumeDesdeSlug(sl){
+      sl = mpSlug(String(sl).replace(/-/g, ' '));
+      if(mpSlugPerfume[sl]) return mpSlugPerfume[sl];
+      if(allProducts[perfume]) return perfume;                       // link con el código interno
+      // link viejo (por ejemplo si se cambió el nombre): el que más se parezca
+      const cand = Object.keys(mpSlugPerfume).filter(k => k.startsWith(sl) || sl.startsWith(k)).sort((a, b) => Math.abs(a.length - sl.length) - Math.abs(b.length - sl.length));
+      return cand.length ? mpSlugPerfume[cand[0]] : null;
+    }
+    const abrir = () => {
+      if(perfume){
+        const id = perfumeDesdeSlug(perfume);
+        if(id){ openProductModal(id); return; }
+        openBusqueda(String(perfume).replace(/-/g, ' ')); return;  // no existe más: se muestran los parecidos
+      }
+      if(marca){ openStandaloneSection('marcas', false); showBrandResults(marcaDesdeSlug(marca)); return; }
+      if(buscar){ openBusqueda(buscar); return; }
+      if(genero){ const g = ['Mujer', 'Hombre', 'Unisex'].find(x => mpSlug(x) === mpSlug(genero)); if(g){ openGenero(g); return; } }
+      if(ver){
+        if(MP_VER[ver]){ openStandaloneSection(MP_VER[ver]); return; }
+        if(['ofertas', 'nuevos', 'tendencias'].includes(ver)){ openCategoriaFull(ver); return; }
+      }
+    };
+    // si se está viendo la intro de la M, se abre apenas termina (así se ve la animación de la ficha)
+    const t0 = Date.now();
+    (function esperar(){
+      const intro = document.getElementById('xpIntro');
+      if(!intro || intro.classList.contains('is-leaving') || window.__xpIntroFinished || Date.now() - t0 > 9000) abrir();
+      else setTimeout(esperar, 80);
+    })();
+  })();
+
   // la M espera también a las primeras fotos de productos del inicio (máx. ~4 s)
   (function(){
     const imgs = [];
