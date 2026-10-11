@@ -859,6 +859,7 @@
   }
   .prod-ml-list{display:flex;flex:0 0 48px;height:48px;align-content:flex-start;flex-wrap:wrap;gap:4px;margin-top:auto;margin-bottom:10px;}
   .prod-ml-chip.sin-stock-variant{opacity:.4;text-decoration:line-through;}
+  .prod-ml-chip.is-precio{ background:rgba(10,9,8,.09); border-color:rgba(10,9,8,.38); color:#0a0908; font-weight:700; }
   .price-row{ display:flex; align-items:baseline; justify-content:flex-start; gap:10px; margin-bottom:16px; }
   .price-old{ font-size:12.5px; color:#a3a3a3; text-decoration:line-through; font-weight:500; }
   .price-new{ font-size:17px; font-weight:800; color:var(--black); }
@@ -1354,7 +1355,7 @@
 <script>
   /* Versión de la página: si el navegador tiene guardada una versión vieja, se recarga sola (una vez) mientras se ve el logo.
      Al subir cambios, se sube también version.json con el mismo número que MP_BUILD. */
-  window.MP_BUILD = '2026-10-10b';
+  window.MP_BUILD = '2026-10-10c';
   window.__mpVersionOK = false;
   (function(){
     function ok(){ window.__mpVersionOK = true; }
@@ -2383,7 +2384,9 @@
     const priceHtml = b.priceOld
       ? `<div class="price-row"><span class="price-new">${b.priceNew}</span><span class="price-old">${b.priceOld}</span></div>`
       : `<div class="price-row"><span class="price-new">${b.price}</span></div>`;
-    const mlChips = variants.filter(v => v.ml).map(v => `<span class="prod-ml-chip${v.stock === false ? ' sin-stock-variant' : ''}">${v.ml}</span>`).join('');
+    const conMl = variants.filter(v => v.ml);
+    // con varias medidas, la del precio que se muestra (la primera, la más chica) queda marcada en gris
+    const mlChips = conMl.map((v, k) => `<span class="prod-ml-chip${v.stock === false ? ' sin-stock-variant' : ''}${k === 0 && conMl.length > 1 ? ' is-precio' : ''}">${v.ml}</span>`).join('');
     return `
       <div class="prod-card${sinStock ? ' sin-stock' : ''}" data-id="${b.id}">
         ${badge}
