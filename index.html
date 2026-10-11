@@ -1334,8 +1334,14 @@
     var nav = (performance.getEntriesByType && performance.getEntriesByType('navigation')[0]) || {};
     // primera vez: intro completa con fondo oscuro. Al recargar (o volver a entrar en la misma sesión): solo el logo sobre la página
     if(!force && (sessionStorage.getItem('xpIntroSeen') || nav.type === 'reload')) document.documentElement.classList.add('xp-intro-light');
+    // entrar con un link de marca / perfume / búsqueda: se tapa el inicio hasta que se abre esa página (máx. 10 s)
+    if(/[?&](perfume|marca|buscar|ver|genero)=/.test(location.search)){
+      document.documentElement.classList.add('mp-deeplink');
+      setTimeout(function(){ document.documentElement.classList.remove('mp-deeplink'); }, 10000);
+    }
   }catch(e){} })();
 </script>
+<style>html.mp-deeplink body > *:not(.xp-intro):not(script){ visibility:hidden !important; }</style>
 <script>
   /* Sin zoom en celular: Safari de iPhone ignora "user-scalable=no", así que se frena el pellizco a mano */
   (function(){
@@ -1348,7 +1354,7 @@
 <script>
   /* Versión de la página: si el navegador tiene guardada una versión vieja, se recarga sola (una vez) mientras se ve el logo.
      Al subir cambios, se sube también version.json con el mismo número que MP_BUILD. */
-  window.MP_BUILD = '2026-10-10a';
+  window.MP_BUILD = '2026-10-10b';
   window.__mpVersionOK = false;
   (function(){
     function ok(){ window.__mpVersionOK = true; }
@@ -2369,7 +2375,7 @@
     return `<svg class="hot-badge hot-badge-v3${modal ? ' hot-badge-modal' : ''}" viewBox="0 0 28 30" xmlns="http://www.w3.org/2000/svg" aria-label="Tendencia" role="img"><path class="flame-lick flame-lick-l" d="M4 6C2.2 8.3 1.6 10.3 1.9 12C2.1 13.4 3.1 14.1 4 13.6C4.7 13.2 4.9 11.9 4.5 10.5C4.1 9.2 4 7.6 4 6Z"/><path class="flame-lick flame-lick-r" d="M24 5C25.8 7.3 26.4 9.3 26.1 11C25.9 12.4 24.9 13.1 24 12.6C23.3 12.2 23.1 10.9 23.5 9.5C23.9 8.2 24 6.6 24 5Z"/><path class="flame-lick flame-fly flame-fly-l" d="M4 6C2.2 8.3 1.6 10.3 1.9 12C2.1 13.4 3.1 14.1 4 13.6C4.7 13.2 4.9 11.9 4.5 10.5C4.1 9.2 4 7.6 4 6Z"/><path class="flame-lick flame-fly flame-fly-r" d="M24 5C25.8 7.3 26.4 9.3 26.1 11C25.9 12.4 24.9 13.1 24 12.6C23.3 12.2 23.1 10.9 23.5 9.5C23.9 8.2 24 6.6 24 5Z"/><path class="flame-outer" d="M14 3C9 9 6.5 14 6.5 19C6.5 24.5 9.8 28 14 28C18.2 28 21.5 24.5 21.5 19C21.5 14 19 9 14 3Z"><animate attributeName="d" dur="3.2s" begin="0s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.25;0.5;0.75;1" keySplines=".45 0 .55 1;.45 0 .55 1;.45 0 .55 1;.45 0 .55 1" values="M14 3C9 9 6.5 14 6.5 19C6.5 24.5 9.8 28 14 28C18.2 28 21.5 24.5 21.5 19C21.5 14 19 9 14 3Z;M13.7 2.6C8.9 8.8 6.5 13.9 6.5 19C6.5 24.5 9.8 28 14 28C18.2 28 21.5 24.5 21.5 19.1C21.5 14.1 18.8 8.9 13.7 2.6Z;M14 3C9 9 6.5 14 6.5 19C6.5 24.5 9.8 28 14 28C18.2 28 21.5 24.5 21.5 19C21.5 14 19 9 14 3Z;M14.3 3.2C9.2 9.1 6.5 14.1 6.5 19C6.5 24.5 9.8 28 14 28C18.2 28 21.5 24.5 21.5 19C21.5 13.9 19.1 9.1 14.3 3.2Z;M14 3C9 9 6.5 14 6.5 19C6.5 24.5 9.8 28 14 28C18.2 28 21.5 24.5 21.5 19C21.5 14 19 9 14 3Z"/></path><path class="flame-inner" d="M14 9C10.7 13 9 16.5 9 20C9 23.5 11.2 26 14 26C16.8 26 19 23.5 19 20C19 16.5 17.3 13 14 9Z"><animate attributeName="d" dur="2.6s" begin="-.7s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.25;0.5;0.75;1" keySplines=".45 0 .55 1;.45 0 .55 1;.45 0 .55 1;.45 0 .55 1" values="M14 9C10.7 13 9 16.5 9 20C9 23.5 11.2 26 14 26C16.8 26 19 23.5 19 20C19 16.5 17.3 13 14 9Z;M14.4 9.3C11 13.1 9.1 16.6 9.1 20C9.1 23.5 11.2 26 14 26C16.8 26 19 23.5 19 20C19 16.4 17.4 12.9 14.4 9.3Z;M14 9C10.7 13 9 16.5 9 20C9 23.5 11.2 26 14 26C16.8 26 19 23.5 19 20C19 16.5 17.3 13 14 9Z;M13.6 8.5C10.5 12.8 9 16.4 9 20C9 23.5 11.2 26 14 26C16.8 26 19 23.5 19 20.1C19 16.6 17 13 13.6 8.5Z;M14 9C10.7 13 9 16.5 9 20C9 23.5 11.2 26 14 26C16.8 26 19 23.5 19 20C19 16.5 17.3 13 14 9Z"/></path><path class="flame-core" d="M14 15C12 17.3 11 19.3 11 21.3C11 23.3 12.3 24.6 14 24.6C15.7 24.6 17 23.3 17 21.3C17 19.3 16 17.3 14 15Z"><animate attributeName="d" dur="2.1s" begin="-.4s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.25;0.5;0.75;1" keySplines=".45 0 .55 1;.45 0 .55 1;.45 0 .55 1;.45 0 .55 1" values="M14 15C12 17.3 11 19.3 11 21.3C11 23.3 12.3 24.6 14 24.6C15.7 24.6 17 23.3 17 21.3C17 19.3 16 17.3 14 15Z;M13.7 14.5C11.9 17 11 19.2 11 21.3C11 23.3 12.3 24.6 14 24.6C15.7 24.6 17 23.3 17 21.3C17 19.4 15.9 17.2 13.7 14.5Z;M14 15C12 17.3 11 19.3 11 21.3C11 23.3 12.3 24.6 14 24.6C15.7 24.6 17 23.3 17 21.3C17 19.3 16 17.3 14 15Z;M14.3 15.3C12.2 17.5 11.1 19.4 11.1 21.3C11.1 23.3 12.3 24.6 14 24.6C15.7 24.6 16.9 23.3 16.9 21.3C16.9 19.3 16.2 17.4 14.3 15.3Z;M14 15C12 17.3 11 19.3 11 21.3C11 23.3 12.3 24.6 14 24.6C15.7 24.6 17 23.3 17 21.3C17 19.3 16 17.3 14 15Z"/></path></svg>`;
   }
 
-  function cardHtml(b){
+  function cardHtml(b, i){
     const variants = productVariants(b);
     const sinStock = variants.every(v => v.stock === false);
     const badge = sinStock ? `<span class="sale-badge" style="background:rgba(10,9,8,0.75); color:#fff;">Sin stock</span>` : (b.off ? `<span class="sale-badge">${b.off}</span>` : '');
@@ -2382,7 +2388,7 @@
       <div class="prod-card${sinStock ? ' sin-stock' : ''}" data-id="${b.id}">
         ${badge}
         ${hotBadge}
-        <div class="prod-img-wrap"><img class="prod-img" src="${b.img || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%221%22 height=%221%22%3E%3C/svg%3E'}" alt="${b.name}"></div>
+        <div class="prod-img-wrap"><img class="prod-img" src="${b.img || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%221%22 height=%221%22%3E%3C/svg%3E'}" alt="${b.name}"${typeof i === 'number' && i >= 6 ? ' loading="lazy" decoding="async"' : ''}></div>
         <div class="prod-body">
           <div class="prod-brand">${b.brand}</div>
           <h4>${nameHtml(b.name)}</h4>
@@ -3799,17 +3805,20 @@
       }
     };
     // si se está viendo la intro de la M, se abre apenas termina (así se ve la animación de la ficha)
-    const t0 = Date.now();
-    (function esperar(){
-      const intro = document.getElementById('xpIntro');
-      if(!intro || intro.classList.contains('is-leaving') || window.__xpIntroFinished || Date.now() - t0 > 9000) abrir();
-      else setTimeout(esperar, 80);
-    })();
+    try { abrir(); } catch(e){ console.warn('No se pudo abrir el link', e); }
+    window.__mpLinkView = true;
+    document.documentElement.classList.remove('mp-deeplink');
   })();
 
   // la M espera también a las primeras fotos de productos del inicio (máx. ~4 s)
+  // si se entró con un link, espera las fotos de esa página (la ficha del perfume o las primeras tarjetas)
   (function(){
     const imgs = [];
+    if(window.__mpLinkView){
+      const ficha = document.querySelector('#productModal.open #pmTrack img');
+      if(ficha) imgs.push(ficha);
+      else Array.prototype.slice.call(document.querySelectorAll('.prod-img'), 0).filter(i => i.offsetParent !== null).slice(0, 6).forEach(i => imgs.push(i));
+    } else
     ['tendenciasGrid','tendenciasGrid2','ofertasGrid','nuevosGrid'].forEach(id => {
       const g = document.getElementById(id);
       if(g) Array.prototype.slice.call(g.querySelectorAll('.prod-img'), 0, 4).forEach(i => imgs.push(i));
@@ -3818,6 +3827,7 @@
     Promise.race([Promise.all(imgs.map(waitImg)), new Promise(r => setTimeout(r, 4000))]).then(() => { window.__mpDataReady = true; });
   })();
   } catch(err) {
+    document.documentElement.classList.remove('mp-deeplink');
     window.__mpDataReady = true; // no se traba el inicio aunque falle
     console.error('Error inicializando la tienda (productos):', err);
   }
