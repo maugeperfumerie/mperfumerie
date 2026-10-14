@@ -149,7 +149,7 @@
         el.setAttribute('aria-roledescription', 'slide');
         el.dataset.title = titulo;
         el.dataset.brand = f.marca || '';
-        el.innerHTML = '<picture><source media="(max-width:760px)" srcset="' + esc(f.mobile) + '"><img src="' + esc(f.pc) + '" alt="' + esc(titulo) + '" loading="lazy" draggable="false"></picture>' +
+        el.innerHTML = '<picture><source media="(max-width:760px)" srcset="' + esc(f.mobile) + '"><img src="' + esc(f.pc) + '" alt="' + esc(titulo) + '" decoding="async" draggable="false"></picture>' +  // sin loading="lazy": en el celular los flyers de costado (fuera de pantalla) a veces no cargaban al deslizar
           '<button type="button" class="xp-sr">Ver perfumes ' + esc(f.marca || titulo) + '</button>';
         el.addEventListener('click', function(){
           if(el.dataset.brand && typeof window.mpOpenBrand === 'function') window.mpOpenBrand(el.dataset.brand, f); // f: datos del flyer (para mostrar primero sus perfumes)
