@@ -1355,7 +1355,7 @@
 <script>
   /* Versión de la página: si el navegador tiene guardada una versión vieja, se recarga sola (una vez) mientras se ve el logo.
      Al subir cambios, se sube también version.json con el mismo número que MP_BUILD. */
-  window.MP_BUILD = '2026-10-10d';
+  window.MP_BUILD = '2026-10-14a';
   window.__mpVersionOK = false;
   (function(){
     function ok(){ window.__mpVersionOK = true; }
@@ -1375,8 +1375,8 @@
     }catch(e){ ok(); }
   })();
 </script>
-<link rel="stylesheet" href="experience/experience.css?v=2026-09-28e">
-<script src="experience/experience.js?v=2026-09-28e" defer></script>
+<link rel="stylesheet" href="experience/experience.css?v=2026-10-14a">
+<script src="experience/experience.js?v=2026-10-14a" defer></script>
 </head>
 <body>
 <!-- Intro de marca: la M se carga y entra sola (no se puede saltear) -->
@@ -2184,23 +2184,60 @@
   };
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
+  // Conexión más resistente en el celular:
+  // - si la red de datos móviles no deja la conexión "en vivo", Firestore pasa solo a otro modo de conexión
+  // - se guarda una copia de los productos en el teléfono: si un día no hay conexión con Firestore,
+  //   se muestra la última copia en vez de dejar el inicio vacío
+  try { db.settings({ experimentalAutoDetectLongPolling: true }); } catch(e){}
+  try { db.enablePersistence({ synchronizeTabs: true }).catch(() => {}); } catch(e){}
+  // pide datos al servidor; si no responde, reintenta, y como último recurso usa la copia guardada
+  async function mpGetFresco(ref, intentosConCopia, intentosSinCopia){
+    let copia = null, ultimoError = null;
+    for(let intento = 1; ; intento++){
+      try {
+        const s = await ref.get();
+        if(!s.metadata.fromCache) return s;          // llegó del servidor
+        if(s.exists || (s.docs && s.docs.length)) copia = s;
+      } catch(e){ ultimoError = e; }
+      if(copia && intento >= intentosConCopia) return copia;
+      if(intento >= intentosSinCopia){ if(copia) return copia; throw ultimoError || new Error('Sin conexión con Firestore'); }
+      await new Promise(r => setTimeout(r, Math.min(700 * intento, 4000)));
+    }
+  }
+  // si una foto de un producto o flyer falla por la conexión, se vuelve a pedir (hasta 2 veces)
+  document.addEventListener('error', e => {
+    const im = e.target;
+    if(!im || im.tagName !== 'IMG' || !/firebasestorage/.test(im.currentSrc || im.src || '')) return;
+    const n = +(im.dataset.reintentos || 0);
+    if(n >= 2) return;
+    im.dataset.reintentos = n + 1;
+    const src = im.getAttribute('src');
+    setTimeout(() => { im.removeAttribute('src'); im.setAttribute('src', src); }, 1500 * (n + 1));
+  }, true);
 
   // ---------- FLYERS DEL INICIO (se administran desde admin.html) ----------
   (function loadHeroFlyers(){
     const esc = t => String(t || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    const getFlyers = () => db.collection('productos').doc('_flyers').get().catch(() => new Promise(r => setTimeout(r, 1200)).then(() => db.collection('productos').doc('_flyers').get()));
-    getFlyers().then(doc => {
-      if(!doc.exists){ window.__mpFlyersReady = true; return; }
-      const lista = (doc.data().lista || []).filter(f => f && f.pc && f.mobile && f.activo !== false);
+    // Los flyers se guardan también en el celular/compu (localStorage): al entrar se muestran al instante
+    // con la última lista conocida y después se actualizan con lo que llega de Firestore.
+    // Antes, si el pedido a Firestore fallaba dos veces (pasa con datos móviles), el banner quedaba sin flyers.
+    const CACHE_KEY = 'mpFlyersCache';
+    let mostrado = '';   // lista que se está mostrando (en texto, para no redibujar si no cambió)
+    let preloadHecho = false;
+    function preloadFlyers(lista){
       // mientras se ve la M se descargan las fotos de los flyers (las del tamaño de pantalla que corresponde),
       // así al entrar ya están listas; con internet lento no se espera más de ~4,5 s
-      (function preloadFlyers(){
-        const mobile = window.matchMedia('(max-width:640px)').matches;
-        const urls = lista.slice(0, 3).map(f => mobile ? f.mobile : f.pc).filter(Boolean);
-        const loadOne = u => new Promise(r => { const im = new Image(); im.onload = im.onerror = r; im.src = u; });
-        Promise.race([Promise.all(urls.map(loadOne)), new Promise(r => setTimeout(r, 4500))]).then(() => { window.__mpFlyersReady = true; });
-        lista.slice(3).forEach(f => { const im = new Image(); im.src = mobile ? f.mobile : f.pc; });
-      })();
+      const mobile = window.matchMedia('(max-width:760px)').matches;   // mismo corte que el <picture> del carrusel
+      const urls = lista.slice(0, 3).map(f => mobile ? f.mobile : f.pc).filter(Boolean);
+      const loadOne = u => new Promise(r => { const im = new Image(); im.onload = im.onerror = r; im.src = u; });
+      Promise.race([Promise.all(urls.map(loadOne)), new Promise(r => setTimeout(r, 4500))]).then(() => { window.__mpFlyersReady = true; });
+      lista.slice(3).forEach(f => { const im = new Image(); im.src = mobile ? f.mobile : f.pc; });
+    }
+    function mostrarFlyers(lista){
+      const txt = JSON.stringify(lista);
+      if(txt === mostrado) return;
+      mostrado = txt;
+      if(!preloadHecho){ preloadHecho = true; preloadFlyers(lista); }
       // EXPERIMENTAL: el carrusel nuevo (experience.js) escucha este evento
       window.__mpFlyers = lista;
       window.dispatchEvent(new CustomEvent('mp:flyers', { detail: lista }));
@@ -2217,7 +2254,40 @@
     </button>`;
       }).join(''));
       if(window.heroRebuild) window.heroRebuild();
-    }).catch(err => { window.__mpFlyersReady = true; console.warn('No se pudieron cargar los flyers', err); });
+    }
+    // 1) lo guardado de la visita anterior
+    try{
+      const cache = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+      if(Array.isArray(cache) && cache.length) mostrarFlyers(cache);
+    }catch(e){}
+    // 2) lo último de Firestore, con varios reintentos (cada vez un poco más espaciados, ~30 s en total) y de nuevo al volver internet
+    let pidiendo = false, listo = false;
+    function pedirFlyers(intento){
+      if(listo || pidiendo) return;
+      pidiendo = true;
+      db.collection('productos').doc('_flyers').get().then(doc => {
+        pidiendo = false;
+        const delServidor = !doc.metadata.fromCache;
+        if(!doc.exists){
+          if(delServidor){ listo = true; window.__mpFlyersReady = true; return; }
+          throw new Error('sin respuesta del servidor');
+        }
+        const lista = (doc.data().lista || []).filter(f => f && f.pc && f.mobile && f.activo !== false);
+        if(!lista.length) window.__mpFlyersReady = true;
+        mostrarFlyers(lista);
+        if(delServidor){ listo = true; try{ localStorage.setItem(CACHE_KEY, JSON.stringify(lista)); }catch(e){} }
+        else if(intento < 12) setTimeout(() => pedirFlyers(intento + 1), Math.min(700 * intento, 4000));  // era la copia guardada: se sigue buscando la versión nueva
+      }).catch(err => {
+        pidiendo = false;
+        window.__mpFlyersReady = true;   // la M no espera más, pero se sigue intentando
+        console.warn('No se pudieron cargar los flyers (intento ' + intento + ')', err);
+        if(intento < 12) setTimeout(() => pedirFlyers(intento + 1), Math.min(700 * intento, 4000));
+      });
+    }
+    pedirFlyers(1);
+    window.addEventListener('online', () => pedirFlyers(1));
+    // en el celular, al volver a una pestaña que quedó abierta, si no habían llegado se piden de nuevo
+    document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') pedirFlyers(1); });
   })();
 
   // ---------- CONTACTO Y TEXTOS (se editan desde admin.html → Firestore productos/_contacto) ----------
@@ -2303,12 +2373,8 @@
   (async function initSitio(){
   try {
   // si falla la conexión, se reintenta (mientras el logo sigue cargando)
-  const snap = await (async () => {
-    for(let intento = 1; ; intento++){
-      try { return await db.collection('productos').orderBy('orden','asc').get(); }
-      catch(e){ if(intento >= 3) throw e; await new Promise(r => setTimeout(r, 900 * intento)); }
-    }
-  })();
+  // con copia guardada en el teléfono: hasta 4 intentos (~4 s) antes de usarla; sin copia (primera visita): hasta ~30 s
+  const snap = await mpGetFresco(db.collection('productos').orderBy('orden','asc'), 4, 12);
   snap.forEach(doc => {
     const p = normalizeProducto(Object.assign({id: doc.id}, doc.data()));
     todosProductos.push(p);
